@@ -49,3 +49,13 @@ composer require flexphp/banana:^dev-main
 
 # command line : 버전 명시 해서 받기
 composer require flexphp/banana:^3.0
+
+# server.php
+## App 클래스 실행
+App::init();
+
+## resource JSON 자동 로드
+R::init(App::$language ?? '');
+R::__autoload_resource([
+    _VALUES_  => ['sysmsg','strings','integers','arrays']
+]);

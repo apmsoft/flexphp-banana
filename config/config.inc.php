@@ -22,13 +22,4 @@ define('_DB_USER_','test');
 define('_DB_PASSWD_','test!@!@');
 define('_DB_NAME_','test_db');
 define('_DB_PORT_',3306);
-
-# 기본 선언 클래스 /-------------------
-// App::init();
-
-// # resource JSON 자동 로드 /---------------
-// R::init(App::$language ?? '');
-// R::__autoload_resource([
-//     _VALUES_  => ['sysmsg','strings','integers','arrays']
-// ]);
 ?>

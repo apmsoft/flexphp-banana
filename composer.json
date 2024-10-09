@@ -15,7 +15,13 @@
             "Flex\\Banana\\Util\\": "vendor/flexphp/banana/util/"
         },
         "files": [
-            "config/config.inc.php"
+        ]
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "cp -R enum/* ../",
+            "cp -R config/* ../",
+            "cp -R res/* ../"
         ]
     }
 }

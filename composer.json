@@ -5,12 +5,12 @@
     "license": "MIT",
     "repositories": [
         {
-            "type": "vcs",
-            "url": "https://github.com/apmsoft/flexphp-banana"
+            "type": "path",
+            "url": "vendor/flexphp/banana"
         }
     ],
     "require": {
-        "php": ">=8.1"
+        "flexphp/banana": "*"
     },
     "autoload": {
         "psr-4": {

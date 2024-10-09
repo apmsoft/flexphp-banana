@@ -3,7 +3,7 @@ use Flex\Banana\R;
 use Flex\Banana\App;
 
 # root 경로
-define('_ROOT_PATH_',dirname(__DIR__));
+define('_ROOT_PATH_',__DIR__.'/..');
 
 # 기본 설정
 define('_LIBS_','libs');            #PHP 외부라이브러리

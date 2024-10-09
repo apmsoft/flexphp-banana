@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana;
+namespace Flex\Banana\Class;
 
 use \ArrayObject;
 use \Exception;

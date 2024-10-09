@@ -1,7 +1,7 @@
 <?php
 namespace Flex\Banana\Trait;
 
-use Flex\Banana\Log;
+use Flex\Banana\Class\Log;
 
 # 스트링 다단 처리
 # @ FidProviderInterface : requied

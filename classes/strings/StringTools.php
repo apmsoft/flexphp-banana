@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Strings;
+namespace Flex\Banana\Class\Strings;
 
 class StringTools
 {

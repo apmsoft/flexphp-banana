@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Db;
+namespace Flex\Banana\Class\Db;
 use \MySQLi;
 
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공

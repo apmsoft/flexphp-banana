@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Http;
+namespace Flex\Banana\Class\Http;
 
 final class HttpResponse {
     public const __version = '0.5';

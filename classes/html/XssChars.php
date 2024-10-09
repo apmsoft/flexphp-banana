@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Html;
+namespace Flex\Banana\Class\Html;
 
 # purpose : xss 방지 및
 class XssChars

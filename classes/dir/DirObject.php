@@ -1,7 +1,7 @@
 <?php
-namespace Flex\Banana\Dir;
+namespace Flex\Banana\Class\Dir;
 
-use Flex\Banana\Dir\DirInfo;
+use Flex\Banana\Class\Dir\DirInfo;
 
 # 디렉토리 목록 및 디렉토리에 해달하는 파일 가져오기
 class DirObject extends DirInfo

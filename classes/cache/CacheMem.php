@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Cache;
+namespace Flex\Banana\Class\Cache;
 
 use \Memcache;
 

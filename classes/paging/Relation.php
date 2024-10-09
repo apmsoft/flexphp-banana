@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Paging;
+namespace Flex\Banana\Class\Paging;
 
 class Relation
 {

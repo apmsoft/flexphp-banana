@@ -1,7 +1,7 @@
 <?php
-namespace Flex\Banana\Ftp;
+namespace Flex\Banana\Class\Ftp;
 
-use Flex\Banana\Ftp\FtpObject;
+use Flex\Banana\Class\Ftp\FtpObject;
 
 final class Ftp extends FtpObject
 {

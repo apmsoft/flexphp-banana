@@ -1,7 +1,7 @@
 <?php
 namespace Flex\Banana\Interface;
 
-use Flex\Banana\Image\ImageGDS;
+use Flex\Banana\Class\Image\ImageGDS;
 
 interface ImageCompressorInterface
 {

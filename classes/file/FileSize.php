@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\File;
+namespace Flex\Banana\Class\File;
 
 use \ErrorException;
 

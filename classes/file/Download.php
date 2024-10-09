@@ -1,7 +1,7 @@
 <?php
-namespace Flex\Banana\File;
+namespace Flex\Banana\Class\File;
 
-use Flex\Banana\File\FileSize;
+use Flex\Banana\Class\File\FileSize;
 
 # parnet :
 # purpose : 파일다운로드

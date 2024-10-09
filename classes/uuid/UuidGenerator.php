@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Uuid;
+namespace Flex\Banana\Class\Uuid;
 
 class UuidGenerator
 {

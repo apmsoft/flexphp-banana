@@ -1,7 +1,7 @@
 <?php
 namespace Flex\Banana\Trait;
 
-use Flex\Banana\Log;
+use Flex\Banana\Class\Log;
 
 # Base64 Iamge 리사이즈
 # @ ImageCompressorProviderInterface : requied

@@ -1,7 +1,7 @@
 <?php
-namespace Flex\Banana\Image;
+namespace Flex\Banana\Class\Image;
 
-use Flex\Banana\Image\ImageGDS;
+use Flex\Banana\Class\Image\ImageGDS;
 use Exception;
 
 # 이미지 뷰어

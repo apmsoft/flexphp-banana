@@ -1,9 +1,9 @@
 <?php
-namespace Flex\Banana\Db;
+namespace Flex\Banana\Class\Db;
 
-use Flex\Banana\Db\QueryBuilderAbstract;
-use Flex\Banana\Request\Validation;
-use Flex\Banana\Db\DbMySqlInterface;
+use Flex\Banana\Class\Db\QueryBuilderAbstract;
+use Flex\Banana\Class\Request\Validation;
+use Flex\Banana\Class\Db\DbMySqlInterface;
 use \ArrayAccess;
 use \ErrorException;
 

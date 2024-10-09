@@ -1,7 +1,7 @@
 <?php
-namespace Flex\Banana\Date;
+namespace Flex\Banana\Class\Date;
 
-use Flex\Banana\Date\DateTimez;
+use Flex\Banana\Class\Date\DateTimez;
 use \DateTimeImmutable;
 use \DateInterval;
 use \DatePeriod;

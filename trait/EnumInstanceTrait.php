@@ -1,7 +1,7 @@
 <?php
 namespace Flex\Banana\Trait;
 
-use Flex\Banana\Enum\EnumValueStorage;
+use Flex\Banana\Class\Enum\EnumValueStorage;
 
 trait EnumInstanceTrait
 {

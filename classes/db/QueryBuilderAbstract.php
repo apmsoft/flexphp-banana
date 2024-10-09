@@ -1,8 +1,8 @@
 <?php
-namespace Flex\Banana\Db;
+namespace Flex\Banana\Class\Db;
 
 use \MySQLi;
-use Flex\Banana\Db\WhereHelper;
+use Flex\Banana\Class\Db\WhereHelper;
 
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
 abstract class QueryBuilderAbstract extends mysqli

@@ -1,7 +1,7 @@
 <?php
 namespace Flex\Banana\Enum;
 
-use Flex\Banana\Date\DateTimez;
+use Flex\Banana\Class\Date\DateTimez;
 
 trait ExampleEnumTypesTrait
 {

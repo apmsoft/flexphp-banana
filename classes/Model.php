@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana;
+namespace Flex\Banana\Class;
 
 class Model implements \ArrayAccess {
     public const __version = '2.0';

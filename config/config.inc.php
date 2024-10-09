@@ -19,7 +19,12 @@ define('_DATA_','_data');           #파일업로드 및 캐슁파일 위치(707
 define('_UPLOAD_','_data/files');   #첨부파일등
 
 # 데이타베이스 정보
-include_once _ROOT_PATH_.'/config/config.db.php';
+define('_DB_SHA2_ENCRYPT_KEY_','sfsfsfsafsafsfwarfdgjgejgesfsfsafksdfsfsvsvxzvasfddaaerdsadsgd');
+define('_DB_HOST_','mysql-master');
+define('_DB_USER_','test');
+define('_DB_PASSWD_','test!@!@');
+define('_DB_NAME_','test_db');
+define('_DB_PORT_',3306);
 
 # 기본 선언 클래스 /-------------------
 App::init();

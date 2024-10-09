@@ -9,16 +9,13 @@
     "autoload": {
         "psr-4": {
             "Flex\\Banana\\": "vendor/flexphp/banana/classes/",
-            "Flex\\Columns\\": "columns/",
-            "Flex\\Components\\": "components/",
-            "Flex\\Util\\": "util/",
-            "Flex\\Fn\\": "function/",
-            "Flex\\Service\\": "service/",
-            "Flex\\Topadm\\": "topadm/"
+            "Flex\\Banana\\Adapter\\": "vendor/flexphp/banana/adapter/",
+            "Flex\\Banana\\Interface\\": "vendor/flexphp/banana/interface/",
+            "Flex\\Banana\\Trait\\": "vendor/flexphp/banana/trait/",
+            "Flex\\Banana\\Util\\": "vendor/flexphp/banana/util/"
         },
         "files": [
-            "config/config.inc.php",
-            "function/_fn.function.php"
+            "config/config.inc.php"
         ]
     }
 }

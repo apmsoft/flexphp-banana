@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Util;
+namespace Flex\Banana\Util;
 
 use Psr\Http\Message\ServerRequestInterface;
 

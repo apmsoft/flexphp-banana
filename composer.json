@@ -14,11 +14,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Flex\\Banana\\Classes\\": "vendor/flexphp/banana/classes/",
-            "Flex\\Banana\\Adapters\\": "vendor/flexphp/banana/adapters/",
-            "Flex\\Banana\\Interfaces\\": "vendor/flexphp/banana/interfaces/",
-            "Flex\\Banana\\Traits\\": "vendor/flexphp/banana/traits/",
-            "Flex\\Banana\\Utils\\": "vendor/flexphp/banana/utils/"
+            "Flex\\Banana\\Classes\\": "classes/",
+            "Flex\\Banana\\Adapters\\": "adapters/",
+            "Flex\\Banana\\Interfaces\\": "interfaces/",
+            "Flex\\Banana\\Traits\\": "traits/",
+            "Flex\\Banana\\Utils\\": "utils/"
         }
     }
 }

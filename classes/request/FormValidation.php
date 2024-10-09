@@ -1,8 +1,8 @@
 <?php
-namespace Flex\Banana\Class\Request;
+namespace Flex\Banana\Classes\Request;
 
-use Flex\Banana\Class\R;
-use Flex\Banana\Class\Request\Validation;
+use Flex\Banana\Classes\R;
+use Flex\Banana\Classes\Request\Validation;
 
 # 폼체크
 class FormValidation extends Validation

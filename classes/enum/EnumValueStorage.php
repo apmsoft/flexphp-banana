@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Enum;
+namespace Flex\Banana\Classes\Enum;
 
 class EnumValueStorage
 {

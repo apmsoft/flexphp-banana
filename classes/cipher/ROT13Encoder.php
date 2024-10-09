@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Cipher;
+namespace Flex\Banana\Classes\Cipher;
 
 /**
  * 알파벳을 13글자씩 밀어서 치환

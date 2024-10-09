@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Image;
+namespace Flex\Banana\Classes\Image;
 
 # purpose : 이미지 효과주기
 class ImageGDS

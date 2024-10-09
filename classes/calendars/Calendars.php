@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Calendars;
+namespace Flex\Banana\Classes\Calendars;
 
 use \DateTime;
 

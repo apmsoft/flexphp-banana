@@ -1,11 +1,11 @@
 <?php
-namespace Flex\Banana\Class\File;
+namespace Flex\Banana\Classes\File;
 
-use Flex\Banana\Class\Dir\DirInfo;
-use Flex\Banana\Class\Image\ImageExif;
-use Flex\Banana\Class\Cipher\CipherGeneric;
-use Flex\Banana\Class\Cipher\HashEncoder;
-use Flex\Banana\Class\Log;
+use Flex\Banana\Classes\Dir\DirInfo;
+use Flex\Banana\Classes\Image\ImageExif;
+use Flex\Banana\Classes\Cipher\CipherGeneric;
+use Flex\Banana\Classes\Cipher\HashEncoder;
+use Flex\Banana\Classes\Log;
 use \Exception;
 
 class Upload extends DirInfo

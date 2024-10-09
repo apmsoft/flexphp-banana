@@ -1,7 +1,7 @@
 {
     "name": "flexphp/banana",
     "description": "PHP",
-    "type": "project",
+    "type": "library",
     "license": "MIT",
     "repositories": [
         {
@@ -15,19 +15,12 @@
     "autoload": {
         "psr-4": {
             "Flex\\Banana\\Classes\\": "vendor/flexphp/banana/classes/",
-            "Flex\\Banana\\Adapter\\": "vendor/flexphp/banana/adapter/",
-            "Flex\\Banana\\Interface\\": "vendor/flexphp/banana/interface/",
-            "Flex\\Banana\\Trait\\": "vendor/flexphp/banana/trait/",
-            "Flex\\Banana\\Util\\": "vendor/flexphp/banana/util/"
+            "Flex\\Banana\\Adapters\\": "vendor/flexphp/banana/adapters/",
+            "Flex\\Banana\\Interfaces\\": "vendor/flexphp/banana/interfaces/",
+            "Flex\\Banana\\Traits\\": "vendor/flexphp/banana/traits/",
+            "Flex\\Banana\\Utils\\": "vendor/flexphp/banana/utils/"
         },
         "files": [
-        ]
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "cp -R enum/* ../",
-            "cp -R config/* ../",
-            "cp -R res/* ../"
         ]
     }
 }

@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Db;
+namespace Flex\Banana\Classes\Db;
 
 # 데이터베이스 QUERY구문에 사용되는 WHERE문 만드는데 도움을 주는 클래스
 class WhereHelper implements WhereHelperInterface

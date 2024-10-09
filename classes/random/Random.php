@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Random;
+namespace Flex\Banana\Classes\Random;
 
 # purpose : 랜덤문자 만들기
 class Random {

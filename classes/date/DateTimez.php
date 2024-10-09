@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Date;
+namespace Flex\Banana\Classes\Date;
 
 use \DateTime;
 use \DateTimeZone;

@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Text;
+namespace Flex\Banana\Classes\Text;
 
 # purpose : 문자을 변경하거나 더하거나 등 가공하는 역할을 한다.
 class TextUtil

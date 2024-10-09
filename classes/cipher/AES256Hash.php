@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Cipher;
+namespace Flex\Banana\Classes\Cipher;
 
 use Exception;
 

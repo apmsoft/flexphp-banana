@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Json;
+namespace Flex\Banana\Classes\Json;
 
 final class JsonEncoder
 {

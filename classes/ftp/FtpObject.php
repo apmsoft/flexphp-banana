@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Ftp;
+namespace Flex\Banana\Classes\Ftp;
 
 class FtpObject
 {

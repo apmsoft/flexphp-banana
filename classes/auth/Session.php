@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Auth;
+namespace Flex\Banana\Classes\Auth;
 
 final class Session
 {

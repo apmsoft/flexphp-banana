@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Db;
+namespace Flex\Banana\Classes\Db;
 
 interface WhereHelperInterface {
     public function __construct(string $coord = 'AND');

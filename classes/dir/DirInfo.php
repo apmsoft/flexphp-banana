@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Dir;
+namespace Flex\Banana\Classes\Dir;
 
 # purpose : 디렉토리 관련
 class DirInfo

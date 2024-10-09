@@ -1,7 +1,7 @@
 <?php
-namespace Flex\Banana\Class\File;
+namespace Flex\Banana\Classes\File;
 
-use Flex\Banana\Class\Dir\DirObject;
+use Flex\Banana\Classes\Dir\DirObject;
 
 # purpose : 파일삭제
 final class FileRemove extends DirObject

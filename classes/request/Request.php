@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Request;
+namespace Flex\Banana\Classes\Request;
 
 class Request
 {

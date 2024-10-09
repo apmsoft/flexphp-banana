@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class;
+namespace Flex\Banana\Classes;
 
 # 접속에 따른 디바이스|브라우저등 정보
 final class App

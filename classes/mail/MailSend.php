@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Mail;
+namespace Flex\Banana\Classes\Mail;
 
 class MailSend
 {

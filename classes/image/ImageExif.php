@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Class\Image;
+namespace Flex\Banana\Classes\Image;
 
 # purpose : 카메라 촬영 정보
 class ImageExif 

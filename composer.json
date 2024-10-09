@@ -8,7 +8,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Flex\\Banana\\Class\\": "vendor/flexphp/banana/classes/",
+            "Flex\\Banana\\Classes\\": "vendor/flexphp/banana/classes/",
             "Flex\\Banana\\Adapter\\": "vendor/flexphp/banana/adapter/",
             "Flex\\Banana\\Interface\\": "vendor/flexphp/banana/interface/",
             "Flex\\Banana\\Trait\\": "vendor/flexphp/banana/trait/",

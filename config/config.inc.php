@@ -1,6 +1,6 @@
 <?php
-use Flex\Banana\Classes\R;
-use Flex\Banana\Classes\App;
+use Flex\Banana\Class\R;
+use Flex\Banana\Class\App;
 
 # root 경로
 define('_ROOT_PATH_',__DIR__.'/..');

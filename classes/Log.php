@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Classes;
+namespace Flex\Banana\Class;
 
 final class Log
 {

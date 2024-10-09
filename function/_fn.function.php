@@ -1,4 +1,6 @@
 <?php
+namespace Flex\Fn;
+
 function sns_time_format(array $snsf, string $time) : string{
 	return match($snsf[1]) {
 		'second','seconds' => sprintf("%d초전",$snsf[0]),

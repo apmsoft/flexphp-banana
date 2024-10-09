@@ -8,10 +8,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Flex\\Banana\\": "classes/",
+            "Flex\\Banana\\": "vendor/flexphp/banana/classes/",
             "Flex\\Columns\\": "columns/",
             "Flex\\Components\\": "components/",
             "Flex\\Util\\": "util/",
+            "Flex\\Fn\\": "function/",
             "Flex\\Service\\": "service/",
             "Flex\\Topadm\\": "topadm/"
         },

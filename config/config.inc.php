@@ -1,7 +1,4 @@
 <?php
-use Flex\Banana\Class\R;
-use Flex\Banana\Class\App;
-
 # root 경로
 define('_ROOT_PATH_',__DIR__.'/..');
 
@@ -27,11 +24,11 @@ define('_DB_NAME_','test_db');
 define('_DB_PORT_',3306);
 
 # 기본 선언 클래스 /-------------------
-App::init();
+// App::init();
 
-# resource JSON 자동 로드 /---------------
-R::init(App::$language ?? '');
-R::__autoload_resource([
-    _VALUES_  => ['sysmsg','strings','integers','arrays']
-]);
+// # resource JSON 자동 로드 /---------------
+// R::init(App::$language ?? '');
+// R::__autoload_resource([
+//     _VALUES_  => ['sysmsg','strings','integers','arrays']
+// ]);
 ?>

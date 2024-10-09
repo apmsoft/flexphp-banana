@@ -48,7 +48,7 @@ http://flexphp.fancyupsoft.com
 composer require flexphp/banana:^dev-main
 
 # command line : 버전 명시 해서 받기
-composer require flexphp/banana:^3.0
+composer require flexphp/banana:^3.0.1
 
 # server.php
 ## App 클래스 실행

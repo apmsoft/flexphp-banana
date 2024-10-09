@@ -3,6 +3,12 @@
     "description": "PHP",
     "type": "project",
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/apmsoft/flexphp-banana"
+        }
+    ],
     "require": {
         "php": ">=8.1"
     },

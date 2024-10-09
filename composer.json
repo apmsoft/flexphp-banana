@@ -1,0 +1,23 @@
+{
+    "name": "flexphp/banana",
+    "description": "PHP",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flex\\Banana\\": "classes/",
+            "Flex\\Columns\\": "columns/",
+            "Flex\\Components\\": "components/",
+            "Flex\\Util\\": "util/",
+            "Flex\\Service\\": "service/",
+            "Flex\\Topadm\\": "topadm/"
+        },
+        "files": [
+            "config/config.inc.php",
+            "function/_fn.function.php"
+        ]
+    }
+}

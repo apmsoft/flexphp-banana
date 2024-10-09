@@ -19,8 +19,6 @@
             "Flex\\Banana\\Interfaces\\": "vendor/flexphp/banana/interfaces/",
             "Flex\\Banana\\Traits\\": "vendor/flexphp/banana/traits/",
             "Flex\\Banana\\Utils\\": "vendor/flexphp/banana/utils/"
-        },
-        "files": [
-        ]
+        }
     }
 }

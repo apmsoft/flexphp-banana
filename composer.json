@@ -1,5 +1,5 @@
 {
-    "name": "flexphp/banana",
+    "name": "fancyupsoft/flexphp",
     "description": "PHP",
     "type": "library",
     "license": "MIT",
@@ -15,12 +15,12 @@
     "repositories": [
         {
             "type": "path",
-            "url": "vendor/flexphp/banana"
+            "url": "vendor/fancyupsoft/flexphp"
         }
     ],
     "require": {
         "php": ">=8.1",
-        "flexphp/banana": "^3.0.1"
+        "fancyupsoft/flexphp": "^3.0.1"
     },
     "autoload": {
         "psr-4": {

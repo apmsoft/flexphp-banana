@@ -3,14 +3,19 @@
     "description": "PHP",
     "type": "library",
     "license": "MIT",
+    "homepage": "http://flexphp.fancyupsoft.com",
+    "authors": [
+        {
+            "name": "fancyupsoft",
+            "email": "apmsoft@gmail.com",
+            "homepage": "http://flexphp.fancyupsoft.com",
+            "role": "Developer"
+        }
+    ],
     "repositories": [
         {
             "type": "path",
             "url": "vendor/flexphp/banana"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/apmsoft/flexphp-banana"
         }
     ],
     "require": {

@@ -6,7 +6,7 @@ use \Exception;
 
 final class R
 {
-    public const __version = '2.3';
+    public const __version = '2.3.1';
     public static $language = ''; // 국가코드
 
     # resource 값
@@ -84,8 +84,6 @@ final class R
             return R::fetch($args[0]);
         }else if($query == 'select' && count($args)){
             return R::selectR($args[0]);
-        }else if(!R::is($query)){ #이미 로드된데이터인지체크
-            R::id($query);
         }else if(isset($args[0]) && is_string($args[0])){ # 해당하는 리소스 키값 리턴
             return R::get($query, $args[0]);
         }else if(isset($args[0]) && is_array($args[0])){ # 해당하는 리소스 데이터 병합
@@ -107,20 +105,6 @@ final class R
             }else{
                 R::$r->{$query}[R::$language] = array_merge(R::$r->{$query}[R::$language], $args);
             }
-        }
-    }
-
-    ## JSON 데이터를 ID로 빠르게 호출하여 사용
-    private static function id(string $query) : void
-    {
-        $define_dir = match((string)$query){
-            'sysmsg','strings','integers','floats','doubles','arrays' => _VALUES_,
-            'tables' => _QUERY_,
-            default => ''
-        };
-        if($define_dir){
-            $filename = R::findLanguageFile(_ROOT_PATH_.'/'.$define_dir.'/'.$query.'.json');
-            R::parser($filename, $query);
         }
     }
 

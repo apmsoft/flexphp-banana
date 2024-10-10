@@ -4,7 +4,6 @@ namespace Flex\Banana\Classes\Date;
 use \DateTime;
 use \DateTimeZone;
 use \DateInterval;
-use \Exception;
 
 class DateTimez extends DateTime
 {
@@ -22,7 +21,7 @@ class DateTimez extends DateTime
 			$timezone = date_default_timezone_get();
 		}
 		$_timezone = $timezone ?? 'Asia/Seoul';
-		$this->dateTimeZone = new \DateTimeZone($_timezone);
+		$this->dateTimeZone = new DateTimeZone($_timezone);
 		$this->timezone     = $this->dateTimeZone->getName();
 		if(is_array($this->dateTimeZone->getLocation())){
 			$this->location = $this->dateTimeZone->getLocation();

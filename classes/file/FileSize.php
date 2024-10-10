@@ -1,7 +1,7 @@
 <?php
 namespace Flex\Banana\Classes\File;
 
-use \ErrorException;
+use \Exception;
 
 # 파일 용량을 알아보기 쉽도록 변환
 class FileSize
@@ -15,8 +15,8 @@ class FileSize
 	# 파일전체 경로
 	public function __construct(string $filenamez=''){
 		if($filenamez){
-			if(!$filenamez) throw new ErrorException( 'e_filenotfound' );
-			if(!file_exists($filenamez)) throw new ErrorException( 'e_filenotfound');
+			if(!$filenamez) throw new Exception( 'e_filenotfound' );
+			if(!file_exists($filenamez)) throw new Exception( 'e_filenotfound');
 
 			$this->filename = $filenamez;
 			$this->filesize_bytes = filesize($this->filename);
@@ -49,7 +49,7 @@ class FileSize
 	public function __call(string $method, array $params = []) : mixed {
 		$result = '';
 		if(!method_exists($this, $method)){
-            return throw new ErrorException( 'e_not_found_method');
+            return throw new Exception( 'e_not_found_method');
         }
 
 		$result = match($method){

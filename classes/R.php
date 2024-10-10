@@ -6,7 +6,7 @@ use \Exception;
 
 final class R
 {
-    public const __version = '2.2.7';
+    public const __version = '2.3';
     public static $language = ''; // 국가코드
 
     # resource 값
@@ -15,7 +15,7 @@ final class R
     public static $integers = [];
     public static $floats   = [];
     public static $doubles  = [];
-    public static $arrays    = [];
+    public static $arrays   = [];
     public static $tables   = [];
 
     public static $r = [];
@@ -29,22 +29,6 @@ final class R
 
         # resource 객체화 시키기
         R::$r = new ArrayObject(array(), ArrayObject::STD_PROP_LIST);
-    }
-
-    #@ void
-    #res/[strings | integers ]
-    # values  = array('strings', 'integers');
-    public static function __autoload_resource(array $resources) : void
-    {
-        if(is_array($resources)){
-            foreach($resources as $resource_path => $resouces_args){
-                foreach($resouces_args as $resource_name){
-                    if(property_exists(__CLASS__,$resource_name)){
-                        R::parser(R::findLanguageFile(_ROOT_PATH_.'/'.$resource_path.'/'.$resource_name.'.json'), $resource_name);
-                    }
-                }
-            }
-        }
     }
 
     # 특정 리소스 키에 해당하는 값 리턴
@@ -187,33 +171,40 @@ final class R
     # 버전별 AND CLEAN
     public static function filterJSON($json, $assoc = false, $depth = 512, $options = 0) : mixed {
         # // 주석제거
-        $json=preg_replace('/(?<!\S)\/\/\s*[^\r\n]*/', '', $json);
-        $json = strtr($json,array("\n"=>'',"\t"=>'',"\r"=>''));
-        $json = preg_replace('/([{,]+)(\s*)([^"]+?)\s*:/','$1"$3":',$json);
+        $json = preg_replace('/(?<!\S)\/\/\s*[^\r\n]*/', '', $json);
+        $json = strtr($json, array("\n" => '', "\t" => '', "\r" => ''));
+        $json = preg_replace('/([{,]+)(\s*)([^"]+?)\s*:/', '$1"$3":', $json);
 
-        if (version_compare(phpversion(), '8.0.0', '>='))
-        {
+        if (version_compare(phpversion(), '8.0.0', '>=')) {
             $options |= JSON_THROW_ON_ERROR;
             try {
                 $json = json_decode($json, $assoc, $depth, $options);
             } catch (\JsonException $e) {
                 return $e->getMessage();
             }
-        } else if (version_compare(phpversion(), '7.0.0', '>=')) {
-            $options |= JSON_ERROR_EXCEPTION;
+        } elseif (version_compare(phpversion(), '7.3.0', '>=')) {
+            // JSON_ERROR_EXCEPTION is available from PHP 7.3.0
+            $options |= JSON_THROW_ON_ERROR;
             try {
                 $json = json_decode($json, $assoc, $depth, $options);
-            } catch (Exception $e) {
+            } catch (\JsonException $e) {
                 return $e->getMessage();
             }
+        } elseif (version_compare(phpversion(), '7.0.0', '>=')) {
+            // For PHP 7.0.0 to 7.2.x, use manual error checking
+            $json = json_decode($json, $assoc, $depth, $options);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return json_last_error_msg();
+            }
         } else {
+            // For PHP versions below 7.0.0
             $json = json_decode($json, $assoc, $depth);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return json_last_error();
+            }
         }
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return json_last_error();
-        }
-    return $json;
+        return $json;
     }
 
     #@ return String

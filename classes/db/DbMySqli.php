@@ -9,7 +9,7 @@ use \ErrorException;
 
 class DbMySqli extends QueryBuilderAbstract implements DbMySqlInterface,ArrayAccess
 {
-	public const __version = '2.2.3';
+	public const __version = '2.2.4';
 
 	# 암호화 / 복호화
 	const BLOCK_ENCRYPTION_MODE = "aes-256-cbc";	#AES
@@ -21,13 +21,8 @@ class DbMySqli extends QueryBuilderAbstract implements DbMySqlInterface,ArrayAcc
 	public function __construct(string $dsn='',string $user='',string $passwd='', int $port=3306, string $chrset='utf8')
 	{
 		# 데이타베이스 접속
-		if(!empty($dsn)){
-			$dsn_args = explode(':',$dsn);
-			parent::__construct($dsn_args[0],$user,$passwd,$dsn_args[1],$port);
-		}else{//config.inc.php > config.db.php
-			parent::__construct(_DB_HOST_,_DB_USER_,_DB_PASSWD_,_DB_NAME_, _DB_PORT_);
-		}
-
+		$dsn_args = explode(':',$dsn);
+		parent::__construct($dsn_args[0],$user,$passwd,$dsn_args[1],$port);
 		if (mysqli_connect_error()){
 			throw new ErrorException(mysqli_connect_error(),mysqli_connect_errno());
 		}
@@ -407,7 +402,7 @@ class DbMySqli extends QueryBuilderAbstract implements DbMySqlInterface,ArrayAcc
 	}
 
 	# 상속한 부모 프라퍼티 값 포함한 가져오기
-	public function __get(string $propertyName) : mixed{
+	public function __get(string $propertyName) {
 		if(property_exists(__CLASS__,$propertyName)){
 			if($propertyName == 'query'){
 				return parent::get();

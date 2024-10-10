@@ -18,7 +18,7 @@ class DirInfo
 	{
 		if(strpos($this->directory, '/') !==false)
 		{
-			$dir_args = explode('/', str_replace(_ROOT_PATH_.'/','',$this->directory));
+			$dir_args = explode('/', $this->directory);
 			$current_dir = _ROOT_PATH_;
 			if(is_array($dir_args)){
 				foreach($dir_args as $folder){

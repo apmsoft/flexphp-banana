@@ -196,7 +196,6 @@ class Validation
                 if(!is_numeric($v)){
                     echo $v.PHP_EOL;
                     return false;
-                    break;
                 }
             }
 			if(!checkdate($ymd_args[1],$ymd_args[2],$ymd_args[0])){

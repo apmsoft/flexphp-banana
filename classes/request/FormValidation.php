@@ -160,6 +160,7 @@ class FormValidation extends Validation
             $err_msg = sprintf(R::sysmsg('e_same_repeat_string'), $max);
             $this->error_report($this->fieldName, 'e_same_repeat_string', sprintf("%s %s", $this->title,$err_msg));
         }
+    return $this;
     }
 
     # 숫자인지 체크

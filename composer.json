@@ -18,6 +18,9 @@
     "autoload": {
         "psr-4": {
             "Flex\\Banana\\": ""
-        }
+        },
+        "files": [
+            "env.php"
+        ]
     }
 }

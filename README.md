@@ -5,22 +5,9 @@ http://flexphp.fancyupsoft.com
 
 
 # 설치 방법
-## composer.json
-{
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/apmsoft/flexphp-banana"
-        }
-    ],
-    "require": {
-        "react/http": "^1.10.0",
-        "react/async":"^4.3.0",
-        "nikic/fast-route": "^1.3",
-        "spatie/async": "^1.5",
-        "flexphp/banana": "dev-main"
-    }
-}
+composer require apmsoft/flexphp-banana:^3.0.2
+composer require apmsoft/flexphp-banana:dev-main
+
 
 # server.php
 ## App 클래스 실행
@@ -28,6 +15,10 @@ App::init();
 
 ## resource JSON 자동 로드
 R::init(App::$language ?? '');
-R::__autoload_resource([
-    _VALUES_  => ['sysmsg','strings','integers','arrays']
-]);
+R::parser('{파일절대경로}/strings.json', 'strings');
+R::parser('{파일절대경로}/sysmsg.json', 'sysmsg');
+R::parser('{파일절대경로}/arrays.json', 'arrays');
+R::parser('{파일절대경로}/tables.json', 'tables');
+R::parser('{파일절대경로}/integers.json', 'integers');
+R::parser('{파일절대경로}/floats.json', 'floats');
+R::parser('{파일절대경로}/holiday.json', 'holiday');

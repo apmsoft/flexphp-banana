@@ -1,0 +1,23 @@
+{
+    "e_null": "请输入一个值",
+    "e_spaces": "请输入时不要包含空格",
+    "e_enum": "找不到与此对应的值",
+    "e_ctype_alnum": "请只输入字母或数字",
+    "e_same_repeat_string": "不能输入超过%s个连续的相同字符",
+    "e_number": "请只输入数字",
+    "e_korean": "不能输入韩文字符",
+    "e_string_length": "请输入长度在%d到%d个字符之间",
+    "e_etc_string": "不能输入除允许的特殊字符%s以外的特殊字符",
+    "e_chk_etc_string": "请至少输入一个特殊字符",
+    "e_alphabet": "请输入英文字母",
+    "e_date": "请正确输入日期",
+    "e_time": "请正确输入时间",
+    "e_date_period": "请正确输入日期期间",
+    "e_equals": "不匹配",
+    "e_up_alphabet": "请输入大写字母",
+    "e_low_alphabet": "请输入小写字母",
+    "e_first_alphabet": "第一个字符必须是英文字母",
+    "e_json": "请以JSON格式输入数据",
+    "e_float": "请只输入数字和小数",
+    "e_link_url": "请正确输入URL地址"
+}

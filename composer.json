@@ -1,12 +1,12 @@
 {
-    "name": "fancyupsoft/flexphp",
+    "name": "apmsoft/flexphp",
     "description": "PHP",
     "type": "library",
     "license": "MIT",
     "homepage": "http://flexphp.fancyupsoft.com",
     "authors": [
         {
-            "name": "fancyupsoft",
+            "name": "Kim JongKwan",
             "email": "apmsoft@gmail.com",
             "homepage": "http://flexphp.fancyupsoft.com",
             "role": "Developer"
@@ -15,7 +15,7 @@
     "repositories": [
         {
             "type": "path",
-            "url": "vendor/fancyupsoft/flexphp"
+            "url": "vendor/apmsoft/flexphp"
         }
     ],
     "require": {

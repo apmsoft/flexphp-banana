@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": ">=8.1",
-        "fancyupsoft/flexphp": "^3.0.1"
+        "apmsoft/flexphp-banana": "*"
     },
     "autoload": {
         "psr-4": {

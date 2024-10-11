@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Strings;
 
 class StringTools
 {
-    public const __version = '0.2.1';
+    public const __version = '0.2.2';
     public function __construct(private string $data=''){}
 
     # convert 10진 to string
@@ -46,6 +46,37 @@ class StringTools
         }
 
     return $this;
+    }
+
+    # convert string to ASCII
+    public function string2Ascii() : StringTools
+    {
+        if(trim($this->data))
+        {
+            $cdata = '';
+            $len = strlen($this->data);
+            for($i = 0; $i < $len; $i++) {
+                $cdata .= ord($this->data[$i]);
+            }
+            $this->data = $cdata;
+        }
+        return $this;
+    }
+
+    # convert ASCII to 16진 (hex)
+    public function ascii2Hex() : StringTools
+    {
+        if(trim($this->data))
+        {
+            $cdata = '';
+            $len = strlen($this->data);
+            for($i = 0; $i < $len; $i += 3) {
+                $ascii = substr($this->data, $i, 3);
+                $cdata .= sprintf("%02x", $ascii);
+            }
+            $this->data = $cdata;
+        }
+        return $this;
     }
 
     public function __get(string $propertyName) : mixed{

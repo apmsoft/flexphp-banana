@@ -1,218 +1,186 @@
 <?php
 namespace Flex\Banana\Classes;
 
-use \ArrayObject;
-use \Exception;
+use ArrayObject;
+use Exception;
+use JsonException;
 
 final class R
 {
-    public const __version = '2.3.1';
-    public static $language = ''; // 국가코드
+    public const __version = '2.3.2';
+    public static string $language = ''; // 국가코드
 
     # resource 값
-    public static $sysmsg   = [];
-    public static $strings  = [];
-    public static $integers = [];
-    public static $floats   = [];
-    public static $doubles  = [];
-    public static $arrays   = [];
-    public static $tables   = [];
+    public static array $sysmsg   = [];
+    public static array $strings  = [];
+    public static array $integers = [];
+    public static array $floats   = [];
+    public static array $doubles  = [];
+    public static array $arrays   = [];
+    public static array $tables   = [];
 
-    public static $r = [];
+    public static ArrayObject $r;
+
+    private static array $cache = [];
 
     # 배열값 추가 등록
-    public static function init(string $lang='', array $support_langs=[])
+    public static function init(string $lang = ''): void
     {
-        $language = (trim($lang)) ? $lang : '';
-
-        R::$language = $language;
-
-        # resource 객체화 시키기
-        R::$r = new ArrayObject(array(), ArrayObject::STD_PROP_LIST);
+        self::$language = trim($lang);
+        self::$r = new ArrayObject([], ArrayObject::STD_PROP_LIST);
     }
 
     # 특정 리소스 키에 해당하는 값 리턴
-    private static function get(string $query, string $fieldname){
-        $r_data = match((string)$query){
-            'sysmsg','strings','integers','floats','doubles','arrays','tables' => R::${$query}[R::$language][$fieldname],
-            default => R::$r->{$query}[R::$language][$fieldname]
-        };
+    protected static function get(string $query, string $fieldname): mixed
+    {
+        $cacheKey = "{$query}_{$fieldname}_" . self::$language;
+        if (isset(self::$cache[$cacheKey])) {
+            return self::$cache[$cacheKey];
+        }
 
-        return $r_data;
+        $target = self::getTarget($query);
+        $result = $target[self::$language][$fieldname] ?? null;
+        
+        self::$cache[$cacheKey] = $result;
+        return $result;
     }
 
     # 특정 리소스에 전체 값 바꾸기
-    public static function set(string $query, array $data) : void{
-        $r_data = match((string)$query){
-            'sysmsg','strings','integers','floats','doubles','arrays','tables' => R::${$query}[R::$language] = $data,
-            default => R::$r->{$query}[R::$language] = $data
-        };
+    public static function set(string $query, array $data): void
+    {
+        $target = &self::getTarget($query);
+        $target[self::$language] = $data;
+        self::clearCache($query);
     }
 
-    private static function fetch(string $query): array{
-        $r_data = match((string)$query){
-            'sysmsg','strings','integers','floats','doubles','arrays','tables' => R::${$query}[R::$language],
-            default => R::$r->{$query}[R::$language]
-        };
+    protected static function fetch(string $query): array
+    {
+        $cacheKey = "{$query}_fetch_" . self::$language;
+        if (isset(self::$cache[$cacheKey])) {
+            return self::$cache[$cacheKey];
+        }
 
-        return $r_data;
+        $target = self::getTarget($query);
+        $result = $target[self::$language] ?? [];
+
+        self::$cache[$cacheKey] = $result;
+        return $result;
     }
 
     # 특정리소스의 키에 해당하는 값들을 배열로 돌려받기
-    private static function selectR(array $params) : array
+    protected static function selectR(array $params): array
     {
-        $argv = [];
-        foreach($params as $query => $fieldname){
-            $columns = [ $fieldname ];
-            if(strpos($fieldname,",") !==false){
-                $columns = explode(",", $fieldname);
-            }
+        $cacheKey = md5(serialize($params) . self::$language);
+        if (isset(self::$cache[$cacheKey])) {
+            return self::$cache[$cacheKey];
+        }
 
-            foreach($columns as $columname){
-                $argv[$columname] = R::get($query,$columname);
+        $argv = [];
+        foreach ($params as $query => $fieldname) {
+            $columns = str_contains($fieldname, ",") ? explode(",", $fieldname) : [$fieldname];
+            foreach ($columns as $columname) {
+                $argv[$columname] = self::get($query, trim($columname));
             }
         }
+
+        self::$cache[$cacheKey] = $argv;
         return $argv;
     }
 
-    public static function __callStatic(string $query, array $args=[])
+    public static function __callStatic(string $query, array $args = []): mixed
     {
-        # 배열을 dictionary Object
-        if(strtolower($query) == 'dic' && count($args)){
-            return (object)$args[0];
-        }else if(($query == 'fetch') && (isset($args[0]) && is_string($args[0])) ){
-            return R::fetch($args[0]);
-        }else if($query == 'select' && count($args)){
-            return R::selectR($args[0]);
-        }else if(isset($args[0]) && is_string($args[0])){ # 해당하는 리소스 키값 리턴
-            return R::get($query, $args[0]);
-        }else if(isset($args[0]) && is_array($args[0])){ # 해당하는 리소스 데이터 병합
-            R::mergeData($query, $args[0]);
+        return match(true) {
+            strtolower($query) === 'dic' && !empty($args) => (object)$args[0],
+            $query === 'fetch' && isset($args[0]) && is_string($args[0]) => self::fetch($args[0]),
+            $query === 'select' && !empty($args) => self::selectR($args[0]),
+            isset($args[0]) && is_string($args[0]) => self::get($query, $args[0]),
+            isset($args[0]) && is_array($args[0]) => self::mergeData($query, $args[0]),
+            default => null
+        };
+    }
+
+    private static function &getTarget(string $query): array
+    {
+        if (in_array($query, ['sysmsg', 'strings', 'integers', 'floats', 'doubles', 'arrays', 'tables'])) {
+            return self::${$query};
+        } else {
+            return self::$r->{$query};
         }
     }
 
     # 배열값 추가 머지
-    private static function mergeData(string $query, array $args) : void
+    private static function mergeData(string $query, array $args): void
     {
-        $r_array = match((string)$query){
-            'sysmsg','strings','integers','floats','doubles','arrays','tables' => R::${$query}[R::$language],
-            default => R::$r->{$query}[R::$language]
-        };
-
-        if(is_array($r_array)){
-            if(property_exists(__CLASS__,$query)){
-                R::${$query}[R::$language] = array_merge(R::${$query}[R::$language], $args);
-            }else{
-                R::$r->{$query}[R::$language] = array_merge(R::$r->{$query}[R::$language], $args);
-            }
-        }
+        $target = &self::getTarget($query);
+        $target[self::$language] = ($target[self::$language] ?? []) + $args;
+        self::clearCache($query);
     }
 
     # 데이터 로딩된 상태인지 체크
-    private static function is(string $query) : bool{
-        $result = match((string)$query){
-            'sysmsg','strings','integers','floats','doubles','arrays','tables' => (isset(R::${$query}[R::$language])) ?? false,
-            default => (isset(R::$r->{$query}[R::$language])) ?? false
-        };
-
-    return $result;
-    }
-
-    #@ void
-    # R::parser(_ROOT_PATH_.'/'._QUERY_.'/tables.json', 'tables');
-    public static function parser(string $filename, string $query) : void
+    private static function is(string $query): bool
     {
-        if(!$query) throw new Exception(__CLASS__.' :: '.__LINE__.' '.$query.' is null');
+        $target = self::getTarget($query);
+        return isset($target[self::$language]);
+    }
 
-        if(!R::is($query))
-        {
-            $real_filename = R::findLanguageFile($filename);
-            $storage_data  = '';
-            $storage_data  = file_get_contents($real_filename);
-            if($storage_data)
-            {
-                $data = R::filterJSON($storage_data,true);
-                if(!is_array($data))
-                {
-                    $e_msg = '';
-                    switch($data){
-                        case JSON_ERROR_DEPTH: $e_msg = 'Maximum stack depth exceeded';break;
-                        case JSON_ERROR_CTRL_CHAR: $e_msg = 'Unexpected control character found';break;
-                        case JSON_ERROR_SYNTAX: $e_msg = 'Syntax error, malformed JSON';break;
-                    }
-                    throw new Exception(__CLASS__.' :: '.__LINE__.' '.$real_filename.' / '.$e_msg);
+    public static function parser(string $filename, string $query): void
+    {
+        if (!$query) {
+            throw new Exception(__CLASS__ . ' :: ' . __LINE__ . ' ' . $query . ' is null');
+        }
+
+        if (!self::is($query)) {
+            $real_filename = self::findLanguageFile($filename);
+            $storage_data = file_get_contents($real_filename);
+            if ($storage_data) {
+                $data = self::filterJSON($storage_data, true);
+                if (!is_array($data)) {
+                    throw new Exception(__CLASS__ . ' :: ' . __LINE__ . ' ' . $real_filename . ' / ' . $data);
                 }
-
-                if(property_exists(__CLASS__,$query)){
-                    R::${$query}[R::$language] = $data;
-                }else{
-                    R::$r->{$query}[R::$language] =&$data;
-                }
+                self::mergeData($query, $data);
             }
         }
     }
 
-    # 버전별 AND CLEAN
-    public static function filterJSON($json, $assoc = false, $depth = 512, $options = 0) : mixed {
-        # // 주석제거
-        $json = preg_replace('/(?<!\S)\/\/\s*[^\r\n]*/', '', $json);
-        $json = strtr($json, array("\n" => '', "\t" => '', "\r" => ''));
-        $json = preg_replace('/([{,]+)(\s*)([^"]+?)\s*:/', '$1"$3":', $json);
+    public static function filterJSON(string $json, bool $assoc = false, int $depth = 512, int $options = 0): mixed
+    {
+        $json = preg_replace(['/\/\/.*$/m', '/\/\*.*?\*\//s'], '', $json);
+        $json = preg_replace('/\s+/', ' ', $json);
+        $json = preg_replace('/([{,])(\s*)([^"]+?)\s*:/', '$1"$3":', $json);
 
-        if (version_compare(phpversion(), '8.0.0', '>=')) {
-            $options |= JSON_THROW_ON_ERROR;
-            try {
-                $json = json_decode($json, $assoc, $depth, $options);
-            } catch (\JsonException $e) {
-                return $e->getMessage();
-            }
-        } elseif (version_compare(phpversion(), '7.3.0', '>=')) {
-            // JSON_ERROR_EXCEPTION is available from PHP 7.3.0
-            $options |= JSON_THROW_ON_ERROR;
-            try {
-                $json = json_decode($json, $assoc, $depth, $options);
-            } catch (\JsonException $e) {
-                return $e->getMessage();
-            }
-        } elseif (version_compare(phpversion(), '7.0.0', '>=')) {
-            // For PHP 7.0.0 to 7.2.x, use manual error checking
-            $json = json_decode($json, $assoc, $depth, $options);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return json_last_error_msg();
-            }
-        } else {
-            // For PHP versions below 7.0.0
-            $json = json_decode($json, $assoc, $depth);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return json_last_error();
-            }
+        try {
+            return json_decode($json, $assoc, $depth, JSON_THROW_ON_ERROR | $options);
+        } catch (JsonException $e) {
+            return $e->getMessage();
         }
-
-        return $json;
     }
 
-    #@ return String
-    # 파일이 해당언어에 해당하는 파일이 있는지 체크
-    public static function findLanguageFile(string $filename) : String{
-        $real_filename   = $filename;
-        $path_parts      = pathinfo($real_filename);
-        $nation_filename = $path_parts['dirname'].'/'.$path_parts['filename'].'_'.R::$language.'.'.$path_parts['extension'];
-        if(file_exists($nation_filename)){
-            $real_filename = $nation_filename;
-        }
-    return $real_filename;
+    public static function findLanguageFile(string $filename): string
+    {
+        $path_parts = pathinfo($filename);
+        $nation_filename = sprintf('%s/%s_%s.%s', 
+            $path_parts['dirname'], 
+            $path_parts['filename'], 
+            self::$language, 
+            $path_parts['extension']
+        );
+        return file_exists($nation_filename) ? $nation_filename : $filename;
     }
 
-    #@ __destruct
-    public function __destruct(){
-        unset(R::$sysmsg);
-        unset(R::$strings);
-        unset(R::$integers);
-        unset(R::$floats);
-        unset(R::$doubles);
-        unset(R::$tables);
-        unset(R::$arrays);
-        unset(R::$r);
+    private static function clearCache(string $query): void
+    {
+        foreach (self::$cache as $key => $value) {
+            if (strpos($key, $query) === 0) {
+                unset(self::$cache[$key]);
+            }
+        }
+    }
+
+    public function __destruct()
+    {
+        foreach (['sysmsg', 'strings', 'integers', 'floats', 'doubles', 'arrays', 'tables', 'r', 'cache'] as $property) {
+            unset(self::${$property});
+        }
     }
 }
 ?>

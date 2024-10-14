@@ -17,7 +17,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Flex\\Banana\\": ""
+            "Flex\\Banana\\Classes\\": "classes",
+            "Flex\\Banana\\Adapters\\": "adapters",
+            "Flex\\Banana\\Interfaces\\": "interfaces",
+            "Flex\\Banana\\Traits\\": "traits",
+            "Flex\\Banana\\Utils\\": "utils"
         }
     }
 }

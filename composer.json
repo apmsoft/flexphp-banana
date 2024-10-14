@@ -18,12 +18,6 @@
     "autoload": {
         "psr-4": {
             "Flex\\Banana\\": ""
-        },
-        "files": [
-            "env.php"
-        ]
-    },
-    "extra": {
-        "sysmsg-path": "res/sysmsg.json"
+        }
     }
 }

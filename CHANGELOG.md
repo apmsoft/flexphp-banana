@@ -1,5 +1,11 @@
 # Changelog
 
+
+## Banana[3.0.5]
+
+### - 2024-10-14
+- Log class self 패치
+
 ## Banana[3.0.4]
 
 ### - 2024-10-14

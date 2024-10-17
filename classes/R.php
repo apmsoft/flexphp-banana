@@ -13,13 +13,9 @@ final class R
     # resource 값
     public static array $sysmsg   = [];
     public static array $strings  = [];
-    public static array $integers = [];
-    public static array $floats   = [];
-    public static array $doubles  = [];
     public static array $arrays   = [];
     public static array $tables   = [];
-
-    public static ArrayObject $r;
+    public static array $numbers  = [];
 
     private static array $cache = [];
 
@@ -27,7 +23,6 @@ final class R
     public static function init(string $lang = ''): void
     {
         self::$language = trim($lang);
-        self::$r = new ArrayObject([], ArrayObject::STD_PROP_LIST);
     }
 
     # 특정 리소스 키에 해당하는 값 리턴
@@ -101,10 +96,8 @@ final class R
 
     private static function &getTarget(string $query): array
     {
-        if (in_array($query, ['sysmsg', 'strings', 'integers', 'floats', 'doubles', 'arrays', 'tables'])) {
+        if (in_array($query, ['sysmsg', 'strings', 'numbers', 'arrays', 'tables'])) {
             return self::${$query};
-        } else {
-            return self::$r->{$query};
         }
     }
 
@@ -178,7 +171,7 @@ final class R
 
     public function __destruct()
     {
-        foreach (['sysmsg', 'strings', 'integers', 'floats', 'doubles', 'arrays', 'tables', 'r', 'cache'] as $property) {
+        foreach (['sysmsg', 'strings', 'numbers', 'arrays', 'tables', 'r', 'cache'] as $property) {
             unset(self::${$property});
         }
     }

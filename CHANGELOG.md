@@ -3,6 +3,9 @@
 
 ## Banana[3.0.5]
 
+### - 2024-10-17
+- R class sysmsg, strings, numbers, arrays, tables 으로 전체 통합
+
 ### - 2024-10-14
 - Log class self 패치
 

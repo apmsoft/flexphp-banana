@@ -1,11 +1,11 @@
 <?php
 namespace Flex\Banana\Classes\Db;
 
-use \MySQLi;
+use Flex\Banana\Classes\Db\DnsBuilder;
 use Flex\Banana\Classes\Db\WhereHelper;
-
+use \Exception;
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
-abstract class QueryBuilderAbstract extends mysqli
+abstract class QueryBuilderAbstract extends DnsBuilder
 {
     public const __version = '1.5.3';
     private string $query_mode;
@@ -23,8 +23,7 @@ abstract class QueryBuilderAbstract extends mysqli
     abstract public function tableJoin(string $type,...$tables) : mixed;
     abstract public function tableSub(...$tables) : mixed;
     abstract public function select(...$columns) : mixed;
-    abstract public function selectGroupBy(...$columns) : mixed;
-    abstract public function selectCrypt(...$columns) : mixed;
+    // abstract public function selectCrypt(...$columns) : mixed;
     abstract public function where(...$where) : mixed;
     abstract public function orderBy(...$orderby) : mixed;
     abstract public function on(...$on) : mixed;
@@ -33,6 +32,10 @@ abstract class QueryBuilderAbstract extends mysqli
     abstract public function groupBy(...$columns) : mixed;
     abstract public function having(...$columns) : mixed;
     abstract public function total(string $column_name) : int;
+
+    public function __construct(string $db_type){
+        parent::__construct( $db_type);
+    }
 
     public function init(string $type = 'main') : void
     {
@@ -64,6 +67,15 @@ abstract class QueryBuilderAbstract extends mysqli
     public function set(string $style, string $value) : void {
         if($this->query_mode == 'SUB') $this->sub_query_params[$style] = $value;
         else $this->query_params[$style] = $value;
+    }
+
+    protected function quoteIdentifier($identifier): string
+    {
+        return match($this->db_type) {
+            'pgsql' => '"' . str_replace('"', '""', $identifier) . '"',
+            'mysql' => '`' . str_replace('`', '``', $identifier) . '`',
+            default => throw new Exception("Unsupported database type for quoting: {$this->db_type}"),
+        };
     }
 
     public function get() : string
@@ -132,4 +144,3 @@ abstract class QueryBuilderAbstract extends mysqli
     return $result;
     }
 }
-?>

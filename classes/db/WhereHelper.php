@@ -171,4 +171,3 @@ class WhereHelper implements WhereHelperInterface
 		$this->where_groups_data =  [];
 	}
 }
-?>

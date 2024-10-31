@@ -22,4 +22,3 @@ class ROT13Encoder
         return str_rot13($this->encrypt_str);
     }
 }
-?>

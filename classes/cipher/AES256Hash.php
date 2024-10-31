@@ -89,4 +89,3 @@ class AES256Hash
         return str_pad($secret_iv, 16, "\0", STR_PAD_RIGHT);
     }
 }
-?>

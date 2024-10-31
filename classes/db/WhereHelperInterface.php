@@ -9,4 +9,3 @@ interface WhereHelperInterface {
     public function fetch(): array;
     public function __get($propertyName): string;
 }
-?>

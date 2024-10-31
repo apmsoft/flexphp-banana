@@ -1,20 +1,19 @@
 <?php
-namespace Flex\Banana\Classes\Cipher;
+namespace Flex\Banana\Classes\Db;
 
 use \ReflectionClass;
 use \Exception;
 
-class CipherGeneric
+class DbCipherGeneric
 {
     public const __version = '1.0';
 
     private $processor;
     private static $allowedProcessors = [
-        AES256Hash::class,
-        HashEncoder::class,
-        PasswordHash::class,
-        Base64UrlEncoder::class,
-        ROT13Encoder::class
+        CipherMysqlAes256Cbc::class,
+        CipherPgsqlAes256Cbc::class,
+        CipherPgsqlBasic::class,
+        CipherPgsqlAes::class,
     ];
 
     public function __construct($processor)

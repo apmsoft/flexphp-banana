@@ -1,5 +1,10 @@
 # Changelog
 
+## Banana[3.0.6]
+
+### - 2024-10-17
+- DbMysqli class deprecated
+- Multi DbManger 클래스 추가 (MySql,PostgreSql 지원 PDO)
 
 ## Banana[3.0.5]
 

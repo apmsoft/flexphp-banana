@@ -95,4 +95,3 @@ class Base64UrlEncoder
         return $this->data;
     }
 }
-?>

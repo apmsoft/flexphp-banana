@@ -23,7 +23,6 @@ abstract class QueryBuilderAbstract extends DnsBuilder
     abstract public function tableJoin(string $type,...$tables) : mixed;
     abstract public function tableSub(...$tables) : mixed;
     abstract public function select(...$columns) : mixed;
-    // abstract public function selectCrypt(...$columns) : mixed;
     abstract public function where(...$where) : mixed;
     abstract public function orderBy(...$orderby) : mixed;
     abstract public function on(...$on) : mixed;

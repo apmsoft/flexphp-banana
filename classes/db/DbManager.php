@@ -10,7 +10,7 @@ use \ArrayAccess;
 
 class DbManager extends QueryBuilderAbstract implements DbSqlInterface,ArrayAccess
 {
-	public const __version = '0.1.1';
+	public const __version = '0.1.2';
     public $pdo;
     private $params = [];
     private array $pdo_options = [
@@ -215,9 +215,6 @@ class DbManager extends QueryBuilderAbstract implements DbSqlInterface,ArrayAcce
 
 			return new DbSqlResult($stmt);
 		} catch (PDOException $e) {
-			error_log("Query failed: " . $e->getMessage());
-			error_log("SQL: " . $query);
-			error_log("Params: " . print_r($params, true));
 			throw new Exception("Query failed: " . $e->getMessage());
 		}
 	}
@@ -281,10 +278,11 @@ class DbManager extends QueryBuilderAbstract implements DbSqlInterface,ArrayAcce
 		$boundParams = [];
 
 		foreach ($this->params as $field => $value) {
-			// Check for HEX(AES_ENCRYPT and encode(encrypt_iv
 			if (is_string($value) && (str_contains($value, 'HEX(AES_ENCRYPT(') || str_contains($value, 'encode('))) {
-				$setClauses[] = "$field = $value"; // Directly add the expression to set clauses
-			} else {
+				$setClauses[] = "$field = $value";
+			}else if (is_string($value) && preg_match("/^$field(\+|\-|\*|\/)[0-9]+$/", $value)) {
+				$setClauses[] = "$field = $value";
+			}else {
 				$setClauses[] = "$field = :$field";
 				$boundParams[":$field"] = $value;
 			}

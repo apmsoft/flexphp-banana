@@ -2,6 +2,9 @@
 
 ## Banana[3.0.6]
 
+### - 2024-11-01
+- DbManager class 부분 업데이트,DbSqlInterface connect, selectDb method 추가
+
 ### - 2024-10-17
 - DbMysqli class deprecated
 - Multi DbManger 클래스 추가 (MySql,PostgreSql 지원 PDO)

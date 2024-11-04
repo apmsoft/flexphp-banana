@@ -1,11 +1,10 @@
 <?php
 namespace Flex\Banana\Classes\Db;
 
-use Flex\Banana\Classes\Db\DnsBuilder;
 use Flex\Banana\Classes\Db\WhereHelper;
-use \Exception;
+
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
-abstract class QueryBuilderAbstract extends DnsBuilder
+abstract class QueryBuilderAbstract
 {
     public const __version = '1.5.3';
     private string $query_mode;
@@ -31,10 +30,6 @@ abstract class QueryBuilderAbstract extends DnsBuilder
     abstract public function groupBy(...$columns) : mixed;
     abstract public function having(...$columns) : mixed;
     abstract public function total(string $column_name) : int;
-
-    public function __construct(string $db_type){
-        parent::__construct( $db_type);
-    }
 
     public function init(string $type = 'main') : void
     {
@@ -68,15 +63,6 @@ abstract class QueryBuilderAbstract extends DnsBuilder
         else $this->query_params[$style] = $value;
     }
 
-    protected function quoteIdentifier($identifier): string
-    {
-        return match($this->db_type) {
-            'pgsql' => '"' . str_replace('"', '""', $identifier) . '"',
-            'mysql' => '`' . str_replace('`', '``', $identifier) . '`',
-            default => throw new Exception("Unsupported database type for quoting: {$this->db_type}"),
-        };
-    }
-
     public function get() : string
     {
         preg_match_all("/({+)(.*?)(})/", $this->query_tpl, $matches);
@@ -99,6 +85,20 @@ abstract class QueryBuilderAbstract extends DnsBuilder
             $this->query_mode = 'MAIN';
         }
     return $this->query;
+    }
+
+    public function bindingDNS (string $tpl, array $dsn_options) : string 
+    {
+        preg_match_all("/({+)(.*?)(})/", $tpl, $matches);
+        $patterns = $matches[0];
+        $columns  = $matches[2];
+
+        # binding
+        foreach($patterns as $idx => $text){
+            $column_name = $columns[$idx];
+            $render_args[$text] = (trim($dsn_options[$column_name])) ? $dsn_options[$column_name] :'';
+        }
+        return trim(strtr($tpl, $render_args));
     }
 
     public function buildWhere(...$w) : string

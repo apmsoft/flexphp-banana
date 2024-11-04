@@ -1,5 +1,11 @@
 # Changelog
 
+## Banana[3.0.7]
+
+### - 2024-11-04
+- DbManager 를 제네릭 클래스로 변경 , DbMySql,DbPgSql 클래스 등으로 전문성 있게 분리
+- DnsBuilder class remove
+
 ## Banana[3.0.6]
 
 ### - 2024-11-01

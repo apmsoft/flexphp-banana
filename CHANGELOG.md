@@ -1,11 +1,9 @@
 # Changelog
 
-## Banana[3.0.8]
+## Banana[3.0.7]
 
 ### - 2024-11-05
 - HttpRequest class get,post,첨부파일 외 put, patch, delete 사용성 추가
-
-## Banana[3.0.7]
 
 ### - 2024-11-04
 - DbManager 를 제네릭 클래스로 변경 , DbMySql,DbPgSql 클래스 등으로 전문성 있게 분리

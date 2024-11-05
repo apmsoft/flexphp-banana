@@ -1,5 +1,10 @@
 # Changelog
 
+## Banana[3.0.8]
+
+### - 2024-11-05
+- HttpRequest class get,post,첨부파일 외 put, patch, delete 사용성 추가
+
 ## Banana[3.0.7]
 
 ### - 2024-11-04

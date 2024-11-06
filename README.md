@@ -5,7 +5,7 @@ http://flexphp.fancyupsoft.com
 
 
 # 설치 방법
-composer require apmsoft/flexphp-banana:^3.0
+composer require apmsoft/flexphp-banana:^버전명
 composer require apmsoft/flexphp-banana:dev-main
 
 

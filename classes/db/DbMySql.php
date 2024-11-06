@@ -1,14 +1,15 @@
 <?php
 namespace Flex\Banana\Classes\Db;
 
-use Flex\Banana\Classes\Db\QueryBuilderAbstract;
+use Flex\Banana\Classes\Db\SqlQueryBuilderAbstract;
 use Flex\Banana\Classes\Db\DbSqlResult;
+use Flex\Banana\Classes\Db\DbInterface;
 use \PDO;
 use \PDOException;
 use \Exception;
 use \ArrayAccess;
 
-class DbMySql extends QueryBuilderAbstract implements DbSqlInterface,ArrayAccess
+class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 {
 	public const __version = '0.1.3';
 	private const DSN = "mysql:host={host};port={port};dbname={dbname};charset={charset}";

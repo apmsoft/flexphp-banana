@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Db;
 
 use Flex\Banana\Classes\Db\DbSqlResult;
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
-interface DbSqlInterface
+interface DbInterface
 {
     public function connect(string $host, string $dbname, string $user, string $password, int $port, string $charset, ?array $options=[]) : self;
     public function selectDB( string $dbname ): self;

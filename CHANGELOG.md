@@ -1,5 +1,15 @@
 # Changelog
 
+## Banana[3.0.9]
+### - 2024-11-05
+- adpaters/DbSqlAapter -> DbAdapter 데이터베이스 전체용임을 명시하는 이름으로 변경 및 업데이트
+- classes/db/DbSqlInterface -> DbInterface 데이터베이스 전체용임을 명시하는 이름으로 변경 미 업데이트
+- classes/db/QueryBuilderAbstract -> SqlQueryBuilderAbstract 데이터베이스 SQL 용임을 명시하는 이름으로 변경 미 업데이트
+- WhereHelper 일반 클래스에서 제네릭 클래스로 변경
+- WhereHelper-> WhereSql SQL 전용임으로 명시
+- WhereSqlInterface -> WhereInterface 로 db 전체 interface 이름으로 변경
+- 관련 DbMysql,DbPgSql 클래스 업데이트
+
 ## Banana[3.0.8]
 
 ### - 2024-11-05

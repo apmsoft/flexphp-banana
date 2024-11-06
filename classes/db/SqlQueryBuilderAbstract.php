@@ -2,9 +2,9 @@
 namespace Flex\Banana\Classes\Db;
 
 use Flex\Banana\Classes\Db\WhereHelper;
-
+use Flex\Banana\Classes\Db\WhereSql;
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
-abstract class QueryBuilderAbstract
+abstract class SqlQueryBuilderAbstract
 {
     public const __version = '1.5.3';
     private string $query_mode;
@@ -113,7 +113,7 @@ abstract class QueryBuilderAbstract
 				$result = $wa[0];
 				if($length > 1)
 				{
-                    $whereHelper = new WhereHelper();
+                    $whereHelper = new WhereHelper(new WhereSql());
 
                     # 배열
                     if(is_array($wa[0]))

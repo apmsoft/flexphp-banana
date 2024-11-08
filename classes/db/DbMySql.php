@@ -1,15 +1,15 @@
 <?php
 namespace Flex\Banana\Classes\Db;
 
-use Flex\Banana\Classes\Db\SqlQueryBuilderAbstract;
-use Flex\Banana\Classes\Db\DbSqlResult;
+use Flex\Banana\Classes\Db\QueryBuilderAbstractSql;
+use Flex\Banana\Classes\Db\DbResultSql;
 use Flex\Banana\Classes\Db\DbInterface;
 use \PDO;
 use \PDOException;
 use \Exception;
 use \ArrayAccess;
 
-class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
+class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
 	public const __version = '0.1.3';
 	private const DSN = "mysql:host={host};port={port};dbname={dbname};charset={charset}";
@@ -20,7 +20,11 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ];
 
-	public function __construct(){}
+	public function __construct(
+		WhereSql $whereSql
+	){
+		parent::__construct($whereSql);
+	}
 
 	# @ DbSqlInterface
     public function connect(string $host, string $dbname, string $user, string $password, int $port, string $charset, ?array $options=[]) : self
@@ -52,7 +56,13 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 	}
 
 	# @ DbSqlInterface
-	public function query(string $query = '', array $params = []): DbSqlResult
+	public function whereHelper(): WhereSql
+    {
+        return $this->whereSql;
+    }
+
+	# @ DbSqlInterface
+	public function query(string $query = '', array $params = []): DbResultSql
 	{
 		if (!$query) {
 			$query = $this->query = parent::get();
@@ -68,7 +78,7 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 				throw new Exception("Execution failed: " . implode(", ", $stmt->errorInfo()));
 			}
 
-			return new DbSqlResult($stmt);
+			return new DbResultSql($stmt);
 		} catch (PDOException $e) {
 			throw new Exception("Query failed: " . $e->getMessage());
 		}
@@ -128,8 +138,6 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 		foreach ($this->params as $field => $value) {
 			if (is_string($value) && str_contains($value, 'HEX(AES_ENCRYPT(')) {
 				$setClauses[] = "$field = $value";
-			}else if (is_string($value) && preg_match("/^$field(\+|\-|\*|\/)[0-9]+$/", $value)) {
-				$setClauses[] = "$field = $value";
 			}else {
 				$setClauses[] = "$field = :$field";
 				$boundParams[":$field"] = $value;
@@ -168,7 +176,7 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 		}
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
 	public function tableJoin(string $join, ...$tables) : self{
 		parent::init('JOIN');
 
@@ -189,14 +197,14 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
     public function select(...$columns) : self{
 		$value = implode(',', $columns);
 		parent::set('columns', $value);
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
     public function where(...$where) : self
 	{
 		$result = parent::buildWhere($where);
@@ -207,7 +215,7 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
     public function orderBy(...$orderby) : self
 	{
 		$value = 'ORDER BY '.implode(',',$orderby);
@@ -215,7 +223,7 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
     public function on(...$on) : self
 	{
 		$result = parent::buildWhere($on);
@@ -226,28 +234,28 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
 	public function limit(...$limit): self {
 		$value = 'LIMIT ' . implode(',', $limit);
 		parent::set('limit', $value);
 		return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
     public function distinct(string $column_name) : self{
 		$value = sprintf("DISTINCT %s", $column_name);
 		parent::set('columns', $value);
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
     public function groupBy(...$columns) : self{
 		$value = 'GROUP BY '.implode(',',$columns);
 		parent::set('groupby', $value);
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
     public function having(...$having) : self{
 		$result = parent::buildWhere($having);
 		if($result){
@@ -257,7 +265,7 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 	return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
 	public function total(string $column_name = '*') : int {
 		$value = sprintf("COUNT(%s) AS total_count", $column_name);
 		parent::set('columns', $value);
@@ -268,7 +276,7 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 		return (int)($row['total_count'] ?? 0);
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
 	public function table(...$tables) : self {
 		parent::init('MAIN');
 		$length = count($tables);
@@ -277,7 +285,7 @@ class DbMySql extends SqlQueryBuilderAbstract implements DbInterface,ArrayAccess
 		return $this;
 	}
 
-	# @ QueryBuilderAbstract
+	# @ QueryBuilderAbstractSql
 	public function tableSub(...$tables) : self{
 		parent::init('SUB');
 		$length = count($tables);

@@ -7,4 +7,3 @@ interface ImageCompressorInterface
 {
     public function getImageGDS(): ImageGDS;
 }
-?>

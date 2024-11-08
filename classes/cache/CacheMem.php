@@ -105,5 +105,3 @@ class CacheMem
         $this->_close();
     }
 }
-
-?>

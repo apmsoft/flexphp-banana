@@ -66,4 +66,3 @@ class Random {
 	return $result;
 	}
 }
-?>

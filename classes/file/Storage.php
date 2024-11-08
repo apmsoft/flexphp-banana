@@ -98,5 +98,3 @@ class Storage extends SplFileObject
     return array_filter($args);
     }
 }
-
-?>

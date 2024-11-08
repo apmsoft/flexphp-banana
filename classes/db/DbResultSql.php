@@ -4,7 +4,7 @@ namespace Flex\Banana\Classes\Db;
 use PDO;
 use PDOStatement;
 
-class DbSqlResult {
+class DbResultSql {
     private $statement;
     private $resultSet;
     private $currentRow;

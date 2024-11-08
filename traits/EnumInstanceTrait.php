@@ -30,4 +30,3 @@ trait EnumInstanceTrait
         return EnumValueStorage::getValues(static::class);
     }
 }
-?>

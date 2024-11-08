@@ -99,4 +99,3 @@ final class ImageViewer extends ImageGDS
 	return $result;
 	}
 }
-?>

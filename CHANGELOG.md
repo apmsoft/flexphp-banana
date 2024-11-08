@@ -1,5 +1,10 @@
 # Changelog
 
+## Banana[3.1.0]
+### - 2024-11-08
+- DbCouch,WhereCouch,QueryBuilderAbstractCouch CouchDB 이용 클래스 추가
+- Db 관련 클래스 전체 업데이트 및 구조 설계 업데이트
+
 ## Banana[3.0.9]
 ### - 2024-11-05
 - adpaters/DbSqlAapter -> DbAdapter 데이터베이스 전체용임을 명시하는 이름으로 변경 및 업데이트

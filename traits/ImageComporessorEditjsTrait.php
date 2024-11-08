@@ -26,5 +26,3 @@ trait ImageComporessorEditjsTrait
     # @ ImageCompressorBase64Trait : requied
     abstract protected function resizeBase64Image(string $base64_image, int $width, int $height) : string;
 }
-
-?>

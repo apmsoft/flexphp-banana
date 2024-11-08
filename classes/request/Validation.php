@@ -247,4 +247,3 @@ class Validation
 	return $result;
 	}
 }
-?>

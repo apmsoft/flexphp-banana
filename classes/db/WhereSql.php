@@ -2,7 +2,7 @@
 namespace Flex\Banana\Classes\Db;
 
 use Flex\Banana\Classes\Db\WhereInterface;
-
+use Flex\Banana\Classes\Log;
 # 데이터베이스 QUERY구문에 사용되는 WHERE문 만드는데 도움을 주는 클래스
 class WhereSql implements WhereInterface
 {
@@ -103,21 +103,17 @@ class WhereSql implements WhereInterface
 	}
 
 	# 상속한 부모 프라퍼티 값 포함한 가져오기
-	public function __get($propertyName) : string{
-		if(property_exists(__CLASS__,$propertyName))
-		{
-			if($propertyName == 'where'){
-				#아직 종료되지 않은 begin end가 있는지 체크
-				if($this->current_group){
-					$this->end();
-				}
-				$this->where = (count($this->where_groups_data)) ? "(" . implode ( ") {$this->coord} (", $this->where_groups_data ) . ")" : '';
-				$this->init();
+	public function __get($propertyName){
+		if($propertyName == 'where'){
+			#아직 종료되지 않은 begin end가 있는지 체크
+			if($this->current_group){
+				$this->end();
 			}
-
-			return $this->{$propertyName};
+			$this->where = (count($this->where_groups_data)) ? "(" . implode ( ") {$this->coord} (", $this->where_groups_data ) . ")" : '';
+			$this->init();
 		}
-		return "";
+
+		return $this->{$propertyName};
 	}
 
 	# 초기화

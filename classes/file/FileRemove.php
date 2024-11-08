@@ -44,4 +44,3 @@ final class FileRemove extends DirObject
     return $result;
     }
 }
-?>

@@ -108,4 +108,3 @@ final class Download extends FileSize
         echo $file_contents;
 	}
 }
-?>

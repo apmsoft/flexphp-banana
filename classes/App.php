@@ -112,4 +112,3 @@ final class App
         return '';
     }
 }
-?>

@@ -122,4 +122,3 @@ class TextUtil
     return $result;
     }
 }
-?>

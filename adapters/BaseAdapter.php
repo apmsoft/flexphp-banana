@@ -11,5 +11,3 @@ class BaseAdapter implements BaseAdapterInterface{
         return static::__version;
     }
 }
-
-?>

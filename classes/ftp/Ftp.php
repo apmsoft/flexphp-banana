@@ -85,4 +85,3 @@ final class Ftp extends FtpObject
     return $extention;
     }
 }
-?>

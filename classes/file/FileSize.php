@@ -60,4 +60,3 @@ class FileSize
 	return $result;
 	}
 }
-?>

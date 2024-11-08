@@ -28,5 +28,3 @@ final class HttpResponse {
         return (string)$this();
     }
 }
-
-?>

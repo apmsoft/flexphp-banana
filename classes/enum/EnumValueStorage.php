@@ -25,4 +25,3 @@ class EnumValueStorage
         self::$values[$enumClass] = [];
     }
 }
-?>

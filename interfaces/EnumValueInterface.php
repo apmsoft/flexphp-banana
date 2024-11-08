@@ -7,4 +7,3 @@ interface EnumValueInterface
     public function setValue(string $key, $value): void;
     public function getValue(string $key);
 }
-?>

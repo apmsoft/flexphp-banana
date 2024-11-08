@@ -602,4 +602,3 @@ class Calendars extends DateTime
 		return $this->{$propertyname}; 
 	}
 }
-?>

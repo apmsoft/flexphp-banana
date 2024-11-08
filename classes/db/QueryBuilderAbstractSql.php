@@ -1,10 +1,10 @@
 <?php
 namespace Flex\Banana\Classes\Db;
 
-use Flex\Banana\Classes\Db\WhereHelper;
 use Flex\Banana\Classes\Db\WhereSql;
+
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
-abstract class SqlQueryBuilderAbstract
+abstract class QueryBuilderAbstractSql
 {
     public const __version = '1.5.3';
     private string $query_mode;
@@ -30,6 +30,13 @@ abstract class SqlQueryBuilderAbstract
     abstract public function groupBy(...$columns) : mixed;
     abstract public function having(...$columns) : mixed;
     abstract public function total(string $column_name) : int;
+
+    public function __construct(
+        protected WhereSql $whereSql
+    )
+    {
+        $this->init();
+    }
 
     public function init(string $type = 'main') : void
     {
@@ -113,30 +120,29 @@ abstract class SqlQueryBuilderAbstract
 				$result = $wa[0];
 				if($length > 1)
 				{
-                    $whereHelper = new WhereHelper(new WhereSql());
-
+                    $this->whereSql->__construct();
                     # 배열
                     if(is_array($wa[0]))
                     {
-                        $whereHelper->begin('AND');
+                        $this->whereSql->begin('AND');
                         foreach($wa as $idx => $argv)
                         {
                             $argv_length = count($argv);
                             if($argv_length ==2){
-                                $whereHelper->case($argv[0], '=', $argv[1]);
+                                $this->whereSql->case($argv[0], '=', $argv[1]);
                             }else if($argv_length ==3){
-                                $whereHelper->case($argv[0], $argv[1], $argv[2]);
+                                $this->whereSql->case($argv[0], $argv[1], $argv[2]);
                             }
                         }
-                        $whereHelper->end();
+                        $this->whereSql->end();
                     }else{ # string
                         if($length ==2){
-                            $whereHelper->begin('AND')->case($wa[0], '=', $wa[1])->end();
+                            $this->whereSql->begin('AND')->case($wa[0], '=', $wa[1])->end();
                         }else if($length ==3){
-                            $whereHelper->begin('AND')->case($wa[0], $wa[1], $wa[2])->end();
+                            $this->whereSql->begin('AND')->case($wa[0], $wa[1], $wa[2])->end();
                         }
                     }
-					$result = $whereHelper->__get('where');
+					$result = $this->whereSql->__get('where');
 				}
 			}
 		}

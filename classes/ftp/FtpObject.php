@@ -29,4 +29,3 @@ class FtpObject
         ftp_close($this->conn);
     }
 }
-?>

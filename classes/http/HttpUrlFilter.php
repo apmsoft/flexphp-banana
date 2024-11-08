@@ -40,4 +40,3 @@ class HttpUrlFilter
 		return $this->url;
 	}
 }
-?>

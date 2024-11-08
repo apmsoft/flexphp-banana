@@ -64,7 +64,7 @@ class WhereHelper
         throw new Exception("Method $name does not exist in " . get_class($this->processor));
     }
 
-    public function __get($propertyName) : string
+    public function __get($propertyName) : mixed
     {
         return $this->processor->__get($propertyName);
     }

@@ -141,4 +141,3 @@ class Relation
 	return $result;
 	}
 }
-?>

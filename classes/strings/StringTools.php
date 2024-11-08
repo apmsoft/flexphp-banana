@@ -87,4 +87,3 @@ class StringTools
     return $result;
     }
 }
-?>

@@ -52,4 +52,3 @@ class DirObject extends DirInfo
     return $result;
     }
 }
-?>

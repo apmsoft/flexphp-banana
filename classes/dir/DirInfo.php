@@ -52,4 +52,3 @@ class DirInfo
 	return true;
 	}
 }
-?>

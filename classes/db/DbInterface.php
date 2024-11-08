@@ -7,7 +7,8 @@ interface DbInterface
 {
     public function connect(string $host, string $dbname, string $user, string $password, int $port, string $charset, ?array $options=[]) : self;
     public function selectDB( string $dbname ): self;
-    public function query(string $query) : DbSqlResult;			# 쿼리
+    public function whereHelper() : WhereCouch|WhereSql;
+    public function query(string $query) : DbResultSql|DbResultCouch;			# 쿼리
     public function insert() : void;			# 저장
     public function update() : void;	# 수정
     public function delete() : void;	# 삭제

@@ -25,4 +25,3 @@ trait ImageCompressorBase64Trait
     #@ ImageCompressorProviderInterface : requied
     abstract protected function getImageGDS();
 }
-?>

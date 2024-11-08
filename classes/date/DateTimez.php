@@ -110,4 +110,3 @@ class DateTimez extends DateTime
 	return $result;
 	}
 }
-?>

@@ -5,4 +5,3 @@ interface BaseAdapterInterface
 {
     public function getVersion(): string;
 }
-?>

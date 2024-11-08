@@ -211,7 +211,6 @@ trait FidTrait
             $ano_parent_fid = ($ano_depth<1) ? (explode('.',$ano_root_fid))[0]."." : $ano_root_fid;
 
             # db update
-            $this->db->autocommit(FALSE);
             foreach($cur_fids as $cur_fid)
             {
                 $this_fid = $cur_fid[$this->getFidColumnName()];
@@ -220,13 +219,15 @@ trait FidTrait
                 // Log::d('cur -> ano', $this_fid,'->',$cur_update_fid);
                 $result[] = sprintf("cur => ano : %s -> %s", $this_fid,$cur_update_fid);
                 try{
+                    $this->db->beginTransaction();
                     $this->db[$this->getFidColumnName()] = $cur_update_fid;
                     $this->db->table($this->getTable())->where("`{$using_where_key}`",$cur_fid[$using_where_key])->update();
+                    $this->db->commit();
                 }catch(\Exception $e){
+                    $this->db->rollBack();
                     Log::e($e->getMessage());
                 }
             }
-            $this->db->commit();
 
             # change ano -> cur
             $cur_root_fid = $cur_fids[0][$this->getFidColumnName()];
@@ -235,7 +236,6 @@ trait FidTrait
             $cur_parent_fid = ($cur_depth<1) ? (explode('.',$cur_root_fid))[0]."." : $cur_root_fid;
 
             # db update
-            $this->db->autocommit(FALSE);
             foreach($ano_fids as $ano_fid)
             {
                 $this_fid = $ano_fid[$this->getFidColumnName()];
@@ -244,16 +244,17 @@ trait FidTrait
                 // Log::d('ano -> cur', $this_fid,'->',$ano_update_fid);
                 $result[] = sprintf("ano => cur : %s -> %s", $this_fid,$ano_update_fid);
                 try{
+                    $this->db->beginTransaction();
                     $this->db[$this->getFidColumnName()] = $ano_update_fid;
                     $this->db->table($this->getTable())->where("`{$using_where_key}`",$ano_fid[$using_where_key])->update();
+                    $this->db->commit();
                 }catch(\Exception $e){
+                    $this->db->rollBack();
                     Log::e($e->getMessage());
                 }
             }
-            $this->db->commit();
         }
 
     return $result;
     }
 }
-?>

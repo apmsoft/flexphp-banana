@@ -7,5 +7,5 @@ interface WhereInterface {
     public function begin(string $coord): self;
     public function end(): self;
     public function fetch(): array;
-    public function __get($propertyName): string;
+    public function __get($propertyName);
 }

@@ -61,4 +61,3 @@ class Model implements \ArrayAccess {
         unset($this->args);
     }
 }
-?>

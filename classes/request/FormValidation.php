@@ -348,4 +348,3 @@ class FormValidation extends Validation
 		));
 	}
 }
-?>

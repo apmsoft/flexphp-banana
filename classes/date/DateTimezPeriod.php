@@ -112,4 +112,3 @@ class DateTimezPeriod
     return $result;
     }
 }
-?>

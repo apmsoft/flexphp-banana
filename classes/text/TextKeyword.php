@@ -112,4 +112,3 @@ class TextKeyword
     return $result;
     }
 }
-?>

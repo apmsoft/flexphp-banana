@@ -44,4 +44,3 @@ trait EntryArrayTrait
         return (self::byName($name, $args[0] ?? 'UPPER'))->value;
     }
 }
-?>

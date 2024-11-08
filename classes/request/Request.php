@@ -133,4 +133,3 @@ class Request
         return isset($this->params[$name]);
     }
 }
-?>

@@ -2,7 +2,6 @@
 namespace Flex\Banana\Classes\Db;
 
 use Flex\Banana\Classes\Log;
-use Flex\Banana\Classes\R;
 use Flex\Banana\Classes\Json\JsonEncoder;
 use Flex\Banana\Classes\Db\DbResultCouch;
 use Flex\Banana\Classes\Db\DbInterface;
@@ -13,7 +12,7 @@ use \ArrayAccess;
 
 class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAccess
 {
-    public const __version = '0.2.0';
+    public const __version = '0.3.0';
     private const BASE_URL = "http://{host}:{port}";
 
     public string $baseUrl;
@@ -21,7 +20,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
     private string $database;
     private array $params = [];
     private array $executeQueries = [];
-    private string $executeType = '';
     private string $table = '';
 
     public function __construct(
@@ -123,9 +121,7 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             $this->params['type'] = $this->table;
         }
 
-        $this->executeType = 'insert';
         $this->executeQueries[] = [
-            "url"     => $this->baseUrl . "/{$this->database}",
             "params"  => $this->params
         ];
 
@@ -168,9 +164,7 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             $this->params['type'] = $this->table;
         }
 
-        $this->executeType = 'update';
         $this->executeQueries[] = [
-            "url"     => $this->baseUrl . "/{$this->database}". "/{$this->params['_id']}",
             "params"  => $this->params
         ];
 
@@ -208,9 +202,7 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         }
         $this->params['_deleted'] = true;
 
-        $this->executeType = 'delete';
         $this->executeQueries[] = [
-            "url"     => $url = $this->baseUrl . "/{$this->database}". "/{$this->params['_id']}",
             "params"  => $this->params
         ];
 
@@ -345,59 +337,37 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         parent::init();
         $this->params = [];
         $this->executeQueries = [];
-        $this->executeType = '';
     }
 
     public function commit(): mixed
     {
         $result = null;
-        $executeType = $this->executeType;
         $executeQueries = $this->executeQueries;
 
-        # reset
         parent::init();
         $this->params = [];
         $this->executeQueries = [];
 
         $httpRequest = new HttpRequest();
         try {
-            // set
-            foreach ($executeQueries as $query) 
-            {
-                $url    = $query['url'];
-                $params = JsonEncoder::toJson($query['params']);
-                $httpRequest->set(
-                    url: $url,
-                    params: $params,
-                    headers: [$this->authHeader, "Content-Type: application/json"]
-                );
-            }
+            $bulkDocs = ['docs' => array_map(fn($query) => $query['params'], $executeQueries)];
+            $url = $this->baseUrl . "/{$this->database}/_bulk_docs";
+            $params = JsonEncoder::toJson($bulkDocs);
 
-            // 요청
-            $result = match($executeType) {
-                "insert" => $httpRequest->post(function($response) {
-                    foreach ($response as $body) {
-                        if (empty($body) || isset($body['error'])) {
-                            throw new Exception("Query failed: " . ($body['error'] ?? 'Unknown error'));
-                        }
+            $httpRequest->set($url, $params, [$this->authHeader, "Content-Type: application/json"]);
+            $result = $httpRequest->post(function($response) {
+                foreach ($response as $body) {
+                    if (empty($body) || isset($body['error'])) {
+                        throw new Exception("Bulk operation failed: " . ($body['error'] ?? 'Unknown error'));
                     }
-                    return true;
-                }),
-                "update", "delete" => $httpRequest->put(function($response) {
-                    foreach ($response as $body) {
-                        if (empty($body) || isset($body['error'])) {
-                            throw new Exception("Query failed: " . ($body['error'] ?? 'Unknown error'));
-                        }
-                    }
-                    return true;
-                }),
-                default => throw new Exception("Invalid execute type: $executeType"),
-            };
-        } catch(Exception $e) {
+                }
+                return true;
+            });
+        } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
 
-    return $result;
+        return $result;
     }
 
     public function rollBack(): void
@@ -405,7 +375,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         parent::init();
         $this->params = [];
         $this->executeQueries = [];
-        $this->executeType = '';
     }
 
     public function offsetSet($offset, $value): void

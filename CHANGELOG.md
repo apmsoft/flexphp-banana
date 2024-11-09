@@ -1,5 +1,9 @@
 # Changelog
 
+## Banana[3.1.2]
+### - 2024-11-09
+- DbCouch Multi [insert, updat, delete] 최적화 기능 향상
+
 ## Banana[3.1.1]
 ### - 2024-11-09
 - DbCouch Multi Query, Multi execute [insert, updat, delete] 기능 추가

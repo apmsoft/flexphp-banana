@@ -35,7 +35,7 @@ final class R
 
         $target = self::getTarget($query);
         $result = $target[self::$language][$fieldname] ?? null;
-        
+
         self::$cache[$cacheKey] = $result;
         return $result;
     }

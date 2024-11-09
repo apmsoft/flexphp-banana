@@ -1,5 +1,9 @@
 # Changelog
 
+## Banana[3.1.1]
+### - 2024-11-09
+- DbCouch Multi Query, Multi execute [insert, updat, delete] 기능 추가
+
 ## Banana[3.1.0]
 ### - 2024-11-08
 - DbCouch,WhereCouch,QueryBuilderAbstractCouch CouchDB 이용 클래스 추가

@@ -2,6 +2,7 @@
 namespace Flex\Banana\Classes\Db;
 
 use Flex\Banana\Classes\Log;
+use Flex\Banana\Classes\R;
 use Flex\Banana\Classes\Json\JsonEncoder;
 use Flex\Banana\Classes\Db\DbResultCouch;
 use Flex\Banana\Classes\Db\DbInterface;
@@ -12,13 +13,16 @@ use \ArrayAccess;
 
 class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAccess
 {
-    public const __version = '0.1.2';
+    public const __version = '0.2.0';
     private const BASE_URL = "http://{host}:{port}";
 
     public string $baseUrl;
     private string $authHeader;
     private string $database;
     private array $params = [];
+    private array $executeQueries = [];
+    private string $executeType = '';
+    private string $table = '';
 
     public function __construct(
         WhereCouch $whereCouch
@@ -46,7 +50,8 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
                 throw new Exception("Failed to connect to CouchDB server");
             }
         });
-    return $this;
+
+    return $this->selectDB($dbname);
     }
 
     # @ DbSqlInterface
@@ -74,25 +79,36 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
 
 
     # @ DbSqlInterface
-    public function query(string $query = '', array $params = []): DbResultCouch
+    public function query(string $query = '', array $params = []): DbResultCouch | array
     {
         if (!$query) {
-            $query = JsonEncoder::toJson($this->get());
+            $query = JsonEncoder::toJson([$this->get()]);
         }
-        Log::d('query',$query);
-        $httpRequest = new HttpRequest();
-        $url = $this->baseUrl . "/{$this->database}/_find";
-        $httpRequest->set($url, $query, [$this->authHeader,'Content-Type: application/json']);
 
-        $result = null;
-        $httpRequest->post(function($response) use (&$result) {
-            if (empty($response) || isset($response[0]['error'])) {
-                throw new Exception("Query failed: " . ($response[0]['error'] ?? 'Unknown error'));
+        try{
+            $httpRequest = new HttpRequest();
+            $params = json_decode($query,true);
+            foreach($params as $param){
+                $httpRequest->set($this->baseUrl . "/{$this->database}/_find", JsonEncoder::toJson($param), [$this->authHeader,'Content-Type: application/json']);
             }
-            $result = new DbResultCouch($response[0]);
-        });
 
-        return $result;
+            $result = [];
+            $httpRequest->post(function($response) use (&$result) {
+                foreach($response as $body){
+                    if (empty($body) || isset($body['error'])) {
+                        throw new Exception("Query failed: " . ($body['error'] ?? 'Unknown error'));
+                    }
+                    $result[] = new DbResultCouch($body);
+                }
+            });
+
+            if(count($result)==1){
+                $result = $result[0];
+            }
+            return $result;
+        }catch(Exception $e){
+            throw new Exception($e->getMessage());
+        }
     }
 
     # @ DbSqlInterface
@@ -102,14 +118,21 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             throw new Exception("Empty params");
         }
 
-        $httpRequest = new HttpRequest();
-        $url = $this->baseUrl . "/$this->database";
-        $httpRequest->set($url, JsonEncoder::toJson($this->params), [$this->authHeader, "Content-Type: application/json"]);
-        $httpRequest->post(function($response) {
-            if (empty($response) || isset($response[0]['error'])) {
-                throw new Exception("Insert failed: " . ($response[0]['error'] ?? 'Unknown error'));
-            }
-        });
+        # type
+        if(!isset($this->params['type'])){
+            $this->params['type'] = $this->table;
+        }
+
+        $this->executeType = 'insert';
+        $this->executeQueries[] = [
+            "url"     => $this->baseUrl . "/{$this->database}",
+            "params"  => $this->params
+        ];
+
+        Log::d('insert', $this->executeQueries);
+
+        parent::init();
+        $this->params = [];
     }
 
     # @ DbSqlInterface
@@ -142,15 +165,19 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             throw new Exception("Empty _rev is missing");
         }
 
-        # update
-        $httpRequest = new HttpRequest();
-        $url = $this->baseUrl . "/{$this->database}". "/{$this->params['_id']}";
-        $httpRequest->set($url, JsonEncoder::toJson($this->params), [$this->authHeader, "Content-Type: application/json"]);
-        $httpRequest->put(function($response) {
-            if (empty($response) || isset($response[0]['error'])) {
-                throw new Exception("Update failed: " . ($response[0]['error'] ?? 'Unknown error'));
-            }
-        });
+        # type
+        if(!isset($this->params['type'])){
+            $this->params['type'] = $this->table;
+        }
+
+        $this->executeType = 'update';
+        $this->executeQueries[] = [
+            "url"     => $this->baseUrl . "/{$this->database}". "/{$this->params['_id']}",
+            "params"  => $this->params
+        ];
+
+        parent::init();
+        $this->params = [];
     }
 
     # @ DbSqlInterface
@@ -183,29 +210,30 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         }
         $this->params['_deleted'] = true;
 
-        parent::init();
+        $this->executeType = 'delete';
+        $this->executeQueries[] = [
+            "url"     => $url = $this->baseUrl . "/{$this->database}". "/{$this->params['_id']}",
+            "params"  => $this->params
+        ];
 
-        # update
-        $httpRequest = new HttpRequest();
-        $url = $this->baseUrl . "/{$this->database}". "/{$this->params['_id']}";
-        $httpRequest->set($url, JsonEncoder::toJson($this->params), [$this->authHeader, "Content-Type: application/json"]);
-        $httpRequest->put(function($response) {
-            if (empty($response) || isset($response[0]['error'])) {
-                throw new Exception("Update failed: " . ($response[0]['error'] ?? 'Unknown error'));
-            }
-        });
+        parent::init();
+        $this->params = [];
     }
 
     public function createDatabase(string $dbname): void
     {
-        $httpRequest = new HttpRequest();
-        $dbUrl = $this->baseUrl . "/$dbname";
-        $httpRequest->set($dbUrl, "", [$this->authHeader,"Content-Type: application/json"]);
-        $httpRequest->put(function($response) use ($dbname) {
-            if (empty($response) || isset($response[0]['error'])) {
-                throw new Exception("Failed to create database '$dbname'");
-            }
-        });
+        try {
+            $httpRequest = new HttpRequest();
+            $dbUrl = $this->baseUrl . "/$dbname";
+            $httpRequest->set($dbUrl, "", [$this->authHeader,"Content-Type: application/json"]);
+            $httpRequest->put(function($response) use ($dbname) {
+                if (empty($response) || isset($response[0]['error'])) {
+                    throw new Exception("Failed to create database '$dbname'");
+                }
+            });
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
     }
 
     # @ QueryBuilderAbstractCouch
@@ -216,7 +244,7 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         $query = $this->get();
         $query['execution_stats'] = true;
 
-        $result = $this->query(JsonEncoder::toJson($query));
+        $result = $this->query(JsonEncoder::toJson([$query]));
 
         if ($result instanceof DbResultCouch) {
             $executionStats = $result->get_execution_stats();
@@ -228,7 +256,7 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         // 실행 통계를 얻지 못한 경우, 전체 문서를 가져와서 카운트
         $this->init(); // 쿼리 파라미터 초기화
         $this->set('fields', ['_id']);
-        $allDocsResult = $this->query(JsonEncoder::toJson($this->get()));
+        $allDocsResult = $this->query(JsonEncoder::toJson([$this->get()]));
 
         return $allDocsResult->num_rows();
     }
@@ -236,7 +264,13 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
     # @ QueryBuilderAbstractCouch
     public function table(...$tables): self
     {
-        $this->selectDB($tables[0]);
+        if(empty($tables[0])){
+            throw new Exception("Empty table(type) is missing");
+        }
+
+        parent::init();
+        $this->table = $tables[0];
+        $this->set('selector',["type" => $tables[0]]);
         return $this;
     }
 
@@ -264,6 +298,9 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             $result = (!isset($where[1])) ? $where[0] : $this->buildWhere($where);
         }
 		if($result !==null && $result){
+            if(!isset($result['type'])){
+                $result['type'] = ['$eq' => $this->table];
+            }
             $this->set('selector', $result);
 		}
     return $this;
@@ -305,22 +342,75 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         return $this;
     }
 
-    public function beginTransaction(): bool
+    public function beginTransaction(): void
     {
+        Log::d(__METHOD__);
+        parent::init();
         $this->params = [];
-        return true;
+        $this->executeQueries = [];
+        $this->executeType = '';
     }
 
-    public function commit(): bool
+    public function commit(): mixed
     {
+        Log::d(__METHOD__);
+        $result = null;
+        $executeType = $this->executeType;
+        $executeQueries = $this->executeQueries;
+        Log::d($executeType,$executeQueries);
+
+        # reset
+        parent::init();
         $this->params = [];
-        return true;
+        $this->executeQueries = [];
+
+        $httpRequest = new HttpRequest();
+        try {
+            // set
+            foreach ($executeQueries as $query) 
+            {
+                $url    = $query['url'];
+                $params = JsonEncoder::toJson($query['params']);
+                $httpRequest->set(
+                    url: $url,
+                    params: $params,
+                    headers: [$this->authHeader, "Content-Type: application/json"]
+                );
+            }
+
+            // 요청
+            $result = match($executeType) {
+                "insert" => $httpRequest->post(function($response) {
+                    foreach ($response as $body) {
+                        if (empty($body) || isset($body['error'])) {
+                            throw new Exception("Query failed: " . ($body['error'] ?? 'Unknown error'));
+                        }
+                    }
+                    return true;
+                }),
+                "update", "delete" => $httpRequest->put(function($response) {
+                    foreach ($response as $body) {
+                        if (empty($body) || isset($body['error'])) {
+                            throw new Exception("Query failed: " . ($body['error'] ?? 'Unknown error'));
+                        }
+                    }
+                    return true;
+                }),
+                default => throw new Exception("Invalid execute type: $executeType"),
+            };
+        } catch(Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+
+    return $result;
     }
 
-    public function rollBack(): bool
+    public function rollBack(): void
     {
+        parent::init();
         $this->params = [];
-        return true;
+        $this->executeQueries = [];
+        $this->executeType = '';
     }
 
     public function offsetSet($offset, $value): void
@@ -348,17 +438,14 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
 
     public function __call($method, $args)
     {
-        // Implement if needed
     }
 
     public function __get(string $propertyName)
     {
-        if (property_exists(__CLASS__, $propertyName)) {
-            if ($propertyName == 'query') {
-                return JsonEncoder::toJson($this->get());
-            } else {
-                return $this->{$propertyName};
-            }
+        if ($propertyName == 'query') {
+            return $this->get();
+        } else {
+            return $this->{$propertyName} ?? null;
         }
     }
 }

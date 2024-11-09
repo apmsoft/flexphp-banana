@@ -129,8 +129,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             "params"  => $this->params
         ];
 
-        Log::d('insert', $this->executeQueries);
-
         parent::init();
         $this->params = [];
     }
@@ -344,7 +342,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
 
     public function beginTransaction(): void
     {
-        Log::d(__METHOD__);
         parent::init();
         $this->params = [];
         $this->executeQueries = [];
@@ -353,11 +350,9 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
 
     public function commit(): mixed
     {
-        Log::d(__METHOD__);
         $result = null;
         $executeType = $this->executeType;
         $executeQueries = $this->executeQueries;
-        Log::d($executeType,$executeQueries);
 
         # reset
         parent::init();

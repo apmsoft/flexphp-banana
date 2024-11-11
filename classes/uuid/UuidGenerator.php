@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Uuid;
 
 class UuidGenerator
 {
-	public const __version = '1.1';
+	public const __version = '1.2';
 	public function __construct(){
 	}
 
@@ -32,15 +32,18 @@ class UuidGenerator
 
 	#@ String
 	# GenerateUUID V4
-	public function v4()
+	# prekey 에 timestamp, ymdhis, microtime(date('YmdHis') . substr((string)microtime(), 2, 6)) 를 사용할 경우 asc, desc 정렬이 가능함
+	public function v4(?string $prekey=null)
 	{
-        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
 			mt_rand(0, 0xffff), mt_rand(0, 0xffff),
 			mt_rand(0, 0xffff),
 			mt_rand(0, 0x0fff) | 0x4000,
 			mt_rand(0, 0x3fff) | 0x8000,
 			mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
 		);
+
+		return ($prekey !== null && $prekey) ? $prekey.'-'.$uuid : $uuid;
 	}
 
 	#@ String

@@ -1,5 +1,9 @@
 # Changelog
 
+## Banana[3.1.3]
+### - 2024-11-11
+- UuidGenerator v4 시계열 정렬이 가능한 키 구성이 가능하도록 업데이트 asc,desc 를 구현할 수 있는 UUID 키를 생성할 수 있음
+
 ## Banana[3.1.2]
 ### - 2024-11-09
 - DbCouch Multi [insert, updat, delete] 최적화 기능 향상

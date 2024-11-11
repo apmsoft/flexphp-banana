@@ -7,12 +7,13 @@ use Flex\Banana\Classes\Db\DbResultCouch;
 use Flex\Banana\Classes\Db\DbInterface;
 use Flex\Banana\Classes\Http\HttpRequest;
 use Flex\Banana\Classes\Array\ArrayHelper;
+use Flex\Banana\Classes\Date\DateTimez;
 use \Exception;
 use \ArrayAccess;
 
 class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAccess
 {
-    public const __version = '0.3.0';
+    public const __version = '0.3.1';
     private const BASE_URL = "http://{host}:{port}";
 
     public string $baseUrl;
@@ -85,9 +86,10 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
 
         try{
             $httpRequest = new HttpRequest();
+            $url = ($this->table) ? $this->baseUrl."/{$this->database}/_partition/{$this->table}/_find" : $this->baseUrl."/{$this->database}/_find";
             $params = json_decode($query,true);
             foreach($params as $param){
-                $httpRequest->set($this->baseUrl . "/{$this->database}/_find", JsonEncoder::toJson($param), [$this->authHeader,'Content-Type: application/json']);
+                $httpRequest->set($url, JsonEncoder::toJson($param), [$this->authHeader,'Content-Type: application/json']);
             }
 
             $result = [];
@@ -116,9 +118,8 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             throw new Exception("Empty params");
         }
 
-        # type
-        if(!isset($this->params['type'])){
-            $this->params['type'] = $this->table;
+        if(!isset($this->params['_id']) && $this->table){
+            $this->params['_id'] = $this->table.':'.$this->generate_id();
         }
 
         $this->executeQueries[] = [
@@ -127,6 +128,13 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
 
         parent::init();
         $this->params = [];
+    }
+
+    private function generate_id() : string {
+        $now = (new DateTimez("now"))->format('YmdHis');
+        $microtodate = $now . substr((string)microtime(), 2, 6);
+        $uniqid = substr(uniqid(rand(), true), 0, 6); // 고유한 짧은 문자열
+        return $microtodate.'-'.$uniqid;
     }
 
     # @ DbSqlInterface
@@ -157,11 +165,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         # _rev 가 있는지 체크
         if(!isset($this->params['_rev'])){
             throw new Exception("Empty _rev is missing");
-        }
-
-        # type
-        if(!isset($this->params['type'])){
-            $this->params['type'] = $this->table;
         }
 
         $this->executeQueries[] = [
@@ -260,7 +263,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
 
         parent::init();
         $this->table = $tables[0];
-        $this->set('selector',["type" => $tables[0]]);
         return $this;
     }
 
@@ -288,9 +290,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
             $result = (!isset($where[1])) ? $where[0] : $this->buildWhere($where);
         }
 		if($result !==null && $result){
-            if(!isset($result['type'])){
-                $result['type'] = ['$eq' => $this->table];
-            }
             $this->set('selector', $result);
 		}
     return $this;
@@ -351,7 +350,8 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
         $httpRequest = new HttpRequest();
         try {
             $bulkDocs = ['docs' => array_map(fn($query) => $query['params'], $executeQueries)];
-            $url = $this->baseUrl . "/{$this->database}/_bulk_docs";
+            // $url = ($this->table) ? $this->baseUrl."/{$this->database}/_partition/{$this->table}/_bulk_docs" : $this->baseUrl."/{$this->database}/_bulk_docs";
+            $url = $this->baseUrl."/{$this->database}/_bulk_docs";
             $params = JsonEncoder::toJson($bulkDocs);
 
             $httpRequest->set($url, $params, [$this->authHeader, "Content-Type: application/json"]);

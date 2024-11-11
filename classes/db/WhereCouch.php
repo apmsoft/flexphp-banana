@@ -143,7 +143,7 @@ class WhereCouch implements WhereInterface
 				$_coord = '$' . strtolower($this->coord);
 				$result = [$_coord => $this->where_groups_data];
 			}else{
-				$result = $this->where_groups_data[0];
+				$result = (isset($this->where_groups_data[0])) ? $this->where_groups_data[0] : $this->where_groups_data;
 			}
 			$this->init();
 			return $result;
@@ -180,7 +180,6 @@ class WhereCouch implements WhereInterface
 
 	# 초기화
 	private function init() : void {
-		Log::d(__CLASS__,__METHOD__);
 		$this->current_group = '';
 		$this->current_coord = '';
 		$this->where_group   = [];

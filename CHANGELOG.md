@@ -1,5 +1,9 @@
 # Changelog
 
+## Banana[3.1.4]
+### - 2024-12-03
+- Psr-4 규격에 따라 classes 폴더 및의 하부 디렉토리명도 대문자로 시작하도록 변경
+
 ## Banana[3.1.3]
 ### - 2024-11-11
 - WhereCouch, DbCouch 파티션 최신 버전에서 파티션을 table 처럼 처리할 수 있도록 업데이트

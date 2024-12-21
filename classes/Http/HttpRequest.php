@@ -1,8 +1,9 @@
 <?php
 namespace Flex\Banana\Classes\Http;
 use Flex\Banana\Classes\Log;
+
 class HttpRequest {
-    public const __version = '1.2.1';
+    public const __version = '1.2.2';
     private $urls = [];
     private $mch;
 
@@ -25,30 +26,51 @@ class HttpRequest {
         return $this;
     }
 
-    public function get(callable $callback) {
-        return $this->execute('GET', $callback);
+    public function get(callable $callback = null) {
+        $response = $this->execute('GET');
+        if ($callback !== null && is_callable($callback)) {
+            $callback($response);
+        }
+        return $response;
     }
 
-    public function post(callable $callback) {
-        return $this->execute('POST', $callback);
+    public function post(callable $callback = null) {
+        $response = $this->execute('POST');
+        if ($callback !== null && is_callable($callback)) {
+            $callback($response);
+        }
+        return $response;
     }
 
-    public function put(callable $callback) {
-        return $this->execute('PUT', $callback);
+    public function put(callable $callback = null) {
+        $response = $this->execute('PUT');
+        if ($callback !== null && is_callable($callback)) {
+            $callback($response);
+        }
+        return $response;
     }
 
-    public function delete(callable $callback) {
-        return $this->execute('DELETE', $callback);
+    public function delete(callable $callback = null) {
+        $response = $this->execute('DELETE');
+        if ($callback !== null && is_callable($callback)) {
+            $callback($response);
+        }
+        return $response;
     }
 
-    public function patch(callable $callback) {
-        return $this->execute('PATCH', $callback);
+    public function patch(callable $callback = null) {
+        $response = $this->execute('PATCH');
+        if ($callback !== null && is_callable($callback)) {
+            $callback($response);
+        }
+        return $response;
     }
 
-    private function execute(string $method, callable $callback) 
+    private function execute(string $method) 
     {
         $response = [];
-        foreach ($this->urls as $idx => $url) {
+        foreach ($this->urls as $idx => $url) 
+        {
             $ch[$idx] = curl_init($url['url']);
 
             $headers = $url['headers'] ?? [];
@@ -100,6 +122,7 @@ class HttpRequest {
                         }
                     } catch (\JsonException $e) {
                         Log::e($index, 'JSON decode error', $e->getMessage());
+                        throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => $body]));
                     }
                 } else {
                     $tempDecoded = json_decode($body, true);
@@ -107,6 +130,7 @@ class HttpRequest {
                         $decodedBody = $tempDecoded;
                     } else {
                         Log::e($index, 'JSON decode error', json_last_error_msg());
+                        throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => json_last_error_msg()]));
                     }
                 }
             } else {
@@ -119,10 +143,6 @@ class HttpRequest {
                 'url' => curl_getinfo($ch[$index], CURLINFO_EFFECTIVE_URL)
             ];
             curl_multi_remove_handle($this->mch, $ch[$index]);
-        }
-
-        if (is_callable($callback)) {
-            $callback($response);
         }
 
         $this->urls = [];

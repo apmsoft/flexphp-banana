@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Cache;
 
 use \Memcached;
 
-class CacheMem
+class CachedMem
 {
     public const __version = '0.1.1';
     private string $cache_key;

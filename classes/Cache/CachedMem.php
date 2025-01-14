@@ -3,9 +3,9 @@ namespace Flex\Banana\Classes\Cache;
 
 use \Memcached;
 
-class CachedMem
+class CacheMem
 {
-    public const __version = '0.1.0';
+    public const __version = '0.1.1';
     private string $cache_key;
 
     private Memcached $memcached;
@@ -31,19 +31,17 @@ class CachedMem
 
     public function __call(string $method, array $params): mixed
     {
-        if (method_exists($this->memcached, $method)) {
-            $is_flag = match ($method) {
-                'set', 'get', 'delete', 'flush', 'quit' => false,
-                default => true
-            };
+        if (!method_exists($this->memcached, $method)) {
+            throw new \Exception("Method '{$method}' does not exist in Memcached.");
+        }
 
-            return ($is_flag) ?
-                call_user_func_array([$this->memcached, $method], $params) :
-                throw new \Exception("Memcached not exists method: {$method}");
-        } else {
-            throw new \Exception("Memcached not exists method: {$method}");
+        try {
+            return call_user_func_array([$this->memcached, $method], $params);
+        } catch (\Throwable $e) {
+            throw new \Exception("Error calling method '{$method}': " . $e->getMessage(), 0, $e);
         }
     }
+
 
     # 서버 상태 체크 : 서버가 실패하면 false 반환, 성공하면 true
     public function _serverStatus(): bool

@@ -1,5 +1,9 @@
 # Changelog
 
+## Banana[3.1.5]
+### - 2025-01-14
+- Memcached 사용한 CachedMem 클래스 추가
+
 ## Banana[3.1.4]
 ### - 2024-12-03
 - Psr-4 규격에 따라 classes 폴더 및의 하부 디렉토리명도 대문자로 시작하도록 변경

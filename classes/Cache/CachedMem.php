@@ -22,7 +22,7 @@ class CachedMem
         }
     }
 
-    public function __invoke(string $cache_key): CacheMem
+    public function __invoke(string $cache_key): CachedMem
     {
         $this->cache_key = $cache_key;
 
@@ -56,7 +56,7 @@ class CachedMem
      * @param mixed $data 캐싱될 데이터
      * @param int $expiration 캐시 만료 시간 = 0 - 만료되지 않음, 초 단위 >0
      */
-    public function _set(mixed $data, int $expiration = 0): CacheMem
+    public function _set(mixed $data, int $expiration = 0): CachedMem
     {
         if (!$this->memcached->set($this->cache_key, $data, $expiration)) {
             throw new \Exception("Memcached set failed for key: {$this->cache_key}");

@@ -1,6 +1,9 @@
 # Changelog
 
 ## Banana[3.1.5]
+### - 2025-01-21
+- UUID v7() 기능 추가 (시간순 정렬이 가능한 uuid 알고리즘)
+
 ### - 2025-01-14
 - Memcached 사용한 CachedMem 클래스 추가
 

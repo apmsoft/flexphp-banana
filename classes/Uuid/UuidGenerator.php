@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Uuid;
 
 class UuidGenerator
 {
-	public const __version = '1.2';
+	public const __version = '1.3';
 	public function __construct(){
 	}
 
@@ -66,6 +66,29 @@ class UuidGenerator
 			(hexdec(substr($hash, 12, 4)) & 0x0fff) | 0x5000,
 			(hexdec(substr($hash, 16, 4)) & 0x3fff) | 0x8000,
 			substr($hash, 20, 12)
+		);
+	}
+
+	# 시간순 정렬 가능 DESC, ASC
+	public function v7(): string
+	{
+		# Unix timestamp in milliseconds (48 bits)
+		$timestamp = floor(microtime(true) * 1000);
+
+		# Random bits (74 bits)
+		$randA = random_bytes(5);
+		$randB = random_bytes(5);
+
+		# imestamp hex (12 chars)
+		$time_hex = str_pad(dechex($timestamp), 12, '0', STR_PAD_LEFT);
+
+		# variant bits
+		return sprintf('%s-%s-%s-%s-%s',
+			$time_hex,
+			bin2hex(substr($randA, 0, 2)),
+			'7' . bin2hex(substr($randA, 2, 1)),
+			'8' . bin2hex(substr($randA, 3, 1)),
+			bin2hex($randB)
 		);
 	}
 

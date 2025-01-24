@@ -178,10 +178,6 @@ class DbCouch extends QueryBuilderAbstractCouch implements DbInterface, ArrayAcc
     # @ DbSqlInterface
     public function delete(): void
     {
-        if (empty($this->params)) {
-            throw new Exception("Empty parameters or selector is missing");
-        }
-
         # where 문에서 _id 값 찾기
         if(!isset($this->params['_id'])){
             $selectors = (isset($this->query_params['selector']['$and'])) ? $this->query_params['selector']['$and']: $this->query_params['selector'];

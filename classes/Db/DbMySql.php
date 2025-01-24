@@ -161,10 +161,6 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 
 	# @ DbSqlInterface
 	public function delete() : void {
-		if (empty($this->params) || empty($this->query_params['where'])) {
-			throw new Exception("Empty parameters or WHERE clause is missing");
-		}
-
 		$query = sprintf("DELETE FROM %s %s", 
 			$this->query_params['table'], 
 			$this->query_params['where']

@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Uuid;
 
 class UuidGenerator
 {
-	public const __version = '1.3';
+	public const __version = '1.3.1';
 	public function __construct(){
 	}
 
@@ -70,10 +70,9 @@ class UuidGenerator
 	}
 
 	# 시간순 정렬 가능 DESC, ASC
-	public function v7(): string
+	public function v7(string|int $prekey=null): string
 	{
-		# Unix timestamp in milliseconds (48 bits)
-		$timestamp = floor(microtime(true) * 1000);
+		$timestamp = ($prekey) ? time() + $prekey : floor(microtime(true) * 1000);
 
 		# Random bits (74 bits)
 		$randA = random_bytes(5);

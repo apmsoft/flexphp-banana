@@ -1,7 +1,7 @@
 # Changelog
 
 ## Banana[3.1.5]
-### - 2025-01-24
+### - 2025-02-12
 - UUID v7( string|int $prekey=null ) 기능 업데이트 파라메터 추가 가능
 
 ### - 2025-01-24

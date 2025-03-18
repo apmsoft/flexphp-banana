@@ -1,6 +1,9 @@
 # Changelog
 
 ## Banana[3.1.5]
+### - 2025-03-18
+- Cipher/AES256Hash class v1.0 -> v1.0.1 로 업데이트
+
 ### - 2025-02-12
 - UUID v7( string|int $prekey=null ) 기능 업데이트 파라메터 추가 가능
 

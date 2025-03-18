@@ -5,7 +5,7 @@ use Exception;
 
 class AES256Hash
 {
-    public const __version = '1.0';
+    public const __version = '1.0.1';
 
     private string $encrypt_method = 'AES-256-CBC';
 
@@ -29,7 +29,8 @@ class AES256Hash
             return '';
         }
 
-        return $encrypted;
+        // RAW 데이터 출력 + URL-safe Base64
+        return strtr(rtrim(base64_encode($encrypted), '='), '+/', '-_');
     }
 
     /**
@@ -45,6 +46,9 @@ class AES256Hash
     {
         $key = $this->prepareKey($secret_key);
         $iv = $this->prepareIV($secret_iv);
+
+        // URL-safe -> 표준 Base64 변환
+        $ciphertext = strtr($ciphertext, '-_', '+/') . str_repeat('=', strlen($ciphertext) % 4);
 
         $decrypted = openssl_decrypt($ciphertext, $this->encrypt_method, $key, 0, $iv);
 

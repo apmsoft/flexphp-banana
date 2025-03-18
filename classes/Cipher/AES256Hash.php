@@ -5,7 +5,7 @@ use Exception;
 
 class AES256Hash
 {
-    public const __version = '1.0.1';
+    public const __version = '1.0.2';
 
     private string $encrypt_method = 'AES-256-CBC';
 
@@ -48,6 +48,7 @@ class AES256Hash
         $iv = $this->prepareIV($secret_iv);
 
         // URL-safe -> 표준 Base64 변환
+        $ciphertext = base64_decode($ciphertext);
         $ciphertext = strtr($ciphertext, '-_', '+/') . str_repeat('=', strlen($ciphertext) % 4);
 
         $decrypted = openssl_decrypt($ciphertext, $this->encrypt_method, $key, 0, $iv);

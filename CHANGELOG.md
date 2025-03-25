@@ -1,6 +1,9 @@
 # Changelog
 
 ## Banana[3.1.5]
+### - 2025-03-25
+- File/Upload.php 연속공백제거 버그 수정 v2.2.3
+
 ### - 2025-03-18
 - Cipher/AES256Hash class v1.0 -> v1.0.1 로 업데이트
 - Cipher/AES256Hash class v1.0.1 -> v1.0.2 로 업데이트

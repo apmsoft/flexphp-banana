@@ -10,7 +10,7 @@ use \Exception;
 
 class Upload extends DirInfo
 {
-    public const __version = '2.2.2';
+    public const __version = '2.2.3';
     public string $file_extension = '';
 	public string $mimeType;
     public $process;
@@ -189,7 +189,7 @@ class Upload extends DirInfo
     # 첨부 실파일명 특수문자 제거
 	private function cleansEtcWords() : string {
 		$ofilename = preg_replace("/[ #\&\+\-%@=\/\\\:;,\'\"\^`~\|\!\?\*$#<>()\[\]\{\}]/i", '_', $this->process->getClientFilename() ?? $this->process['name']); 
-		$ofilename = preg_replace('/\s\s+/', '_', $ofilename); // 연속된 공백을 하나의 문자로 변경
+		$ofilename = preg_replace('/\s+/', '_', $ofilename); // 연속된 공백을 하나의 문자로 변경
 	return $ofilename;
 	}
 

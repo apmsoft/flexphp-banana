@@ -1,6 +1,9 @@
 # Changelog
 
 ## Banana[3.1.5]
+### - 2025-04-08
+- 컬럼 데이터 플러그인 클래스 traits [DelimitedString,PasswordHash,TimeZone, UniqueId] 추가
+
 ### - 2025-03-25
 - File/Upload.php 연속공백제거 버그 수정 v2.2.3
 

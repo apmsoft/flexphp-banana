@@ -1,5 +1,5 @@
 <?php
-namespace Hhs\Columns\Traits;
+namespace Flex\Banana\Traits;
 
 trait DelimitedStringTrait
 {

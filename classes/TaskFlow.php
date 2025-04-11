@@ -5,8 +5,9 @@ use Flex\Banana\Classes\Array\ArrayHelper;
 
 final class TaskFlow extends ArrayHelper
 {
-    protected mixed $active = null;
-    protected ?callable $errorCallback = null;
+    public const __version = '0.9.0';
+    private mixed $active = null;
+    private ?callable $errorCallback = null;
 
     public function __construct() {}
 

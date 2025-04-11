@@ -5,7 +5,7 @@ use Flex\Banana\Classes\Array\ArrayHelper;
 
 final class TaskFlow extends ArrayHelper
 {
-    public const __version = '1.0.0';
+    public const __version = '1.0.1';
     private mixed $active = null;
     private ?callable $errorCallback = null;
     private array $data = [];
@@ -30,31 +30,29 @@ final class TaskFlow extends ArrayHelper
         return $instance;
     }
 
-    public function set(string $key, mixed $value): static
-    {
-        $this->data[$key] = $value;
-        return $this;
-    }
-
-    public function get(string $key, mixed $default = null): mixed
-    {
-        return $this->data[$key] ?? $default;
-    }
-
-    public function has(string $key): bool
-    {
-        return array_key_exists($key, $this->data);
-    }
-
-    public function remove(string $key): static
-    {
-        unset($this->data[$key]);
-        return $this;
-    }
-
     public function getAll(): array
     {
         return $this->data;
+    }
+
+    public function __set(string $name, mixed $value): void
+    {
+        $this->data[$name] = $value;
+    }
+
+    public function __get(string $name): mixed
+    {
+        return $this->data[$name] ?? null;
+    }
+
+    public function __isset(string $name): bool
+    {
+        return isset($this->data[$name]);
+    }
+
+    public function __unset(string $name): void
+    {
+        unset($this->data[$name]);
     }
 
     public function onError(callable $callback): static

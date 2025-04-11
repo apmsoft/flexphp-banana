@@ -1,4 +1,7 @@
 # Changelog
+## Banana[3.2]
+### - 2025-04-11
+- TaskFlow class 추가
 
 ## Banana[3.1.5]
 ### - 2025-04-08

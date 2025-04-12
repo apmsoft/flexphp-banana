@@ -1,5 +1,9 @@
 # Changelog
-## Banana[3.2]
+## Banana[3.2.0]
+### - 2025-04-12
+- TaskFlow class 에서 ArrayHelper 제거 복잡성 제거 목적
+- TaskFlow 에 Model 클래스 상속시켜 중복성 제거 및 Model 클래스 기능을 그대로 상속 시켜 변수 컨트롤 확장성 극대화 시킴
+
 ### - 2025-04-11
 - TaskFlow class 추가
 - TaskFlow 에서 변수로 담거나 가지고 오거나 있거나 삭제 및 전체 데이터 가공을 편하게 할 수 있도록 업데이트

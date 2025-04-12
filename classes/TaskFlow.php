@@ -1,16 +1,17 @@
 <?php
 namespace Flex\Banana\Classes;
 
-use Flex\Banana\Classes\Array\ArrayHelper;
+use Flex\Banana\Classes\Model;
 
-final class TaskFlow extends ArrayHelper
+final class TaskFlow extends Model
 {
-    public const __version = '1.0.1';
+    public const __version = '1.1.0';
     private mixed $active = null;
     private ?callable $errorCallback = null;
-    private array $data = [];
 
-    public function __construct() {}
+    public function __construct(?array $args = []) {
+        parent::__construct($args);
+    }
 
     public function do(mixed $instance): mixed
     {
@@ -30,34 +31,15 @@ final class TaskFlow extends ArrayHelper
         return $instance;
     }
 
-    public function getAll(): array
-    {
-        return $this->data;
-    }
-
-    public function __set(string $name, mixed $value): void
-    {
-        $this->data[$name] = $value;
-    }
-
-    public function __get(string $name): mixed
-    {
-        return $this->data[$name] ?? null;
-    }
-
-    public function __isset(string $name): bool
-    {
-        return isset($this->data[$name]);
-    }
-
-    public function __unset(string $name): void
-    {
-        unset($this->data[$name]);
-    }
-
     public function onError(callable $callback): static
     {
         $this->errorCallback = $callback;
         return $this;
+    }
+
+    public function __destruct() {
+        parent::__destruct();
+        unset($this->active);
+        unset($this->errorCallback);
     }
 }

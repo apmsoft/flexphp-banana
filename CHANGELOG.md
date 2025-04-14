@@ -1,5 +1,9 @@
 # Changelog
 ## Banana[3.2.0]
+### - 2025-04-14
+- FidProviderInterface 메소드 파라마터 추가 가능 하도록 업데이트
+- EnumInterface 추가, filter, format, validate 선언
+
 ### - 2025-04-12
 - TaskFlow class 에서 ArrayHelper 제거 복잡성 제거 목적
 - TaskFlow 에 Model 클래스 상속시켜 중복성 제거 및 Model 클래스 기능을 그대로 상속 시켜 변수 컨트롤 확장성 극대화 시킴

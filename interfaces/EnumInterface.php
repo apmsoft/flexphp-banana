@@ -1,4 +1,6 @@
 <?php
+namespace Flex\Banana\Interfaces;
+
 interface EnumInterface
 {
     public function filter(mixed $data, ...$params): mixed;

@@ -2,7 +2,7 @@
 ## Banana[3.2.0]
 ### - 2025-04-14
 - FidProviderInterface 메소드 파라마터 추가 가능 하도록 업데이트
-- EnumInterface 추가, filter, format, validate 선언
+- EnumInterface 추가, filter, format, validate 선언 및 null 허용으로 업데이트
 
 ### - 2025-04-12
 - TaskFlow class 에서 ArrayHelper 제거 복잡성 제거 목적

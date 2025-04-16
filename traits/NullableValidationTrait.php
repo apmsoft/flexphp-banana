@@ -15,11 +15,11 @@ trait NullableValidationTrait
      *
      * @return Validation
      */
-    public function checkOptional(string $column_name, string $column_title, mixed $data = null, ...$params): Validation
+    public function checkOptional(string $column_name, string $column_title, mixed $data = null, string $optional): Validation
     {
         $validation = new Validation($column_name, $column_title, $data);
 
-        if (!in_array($params[0] ?? null, ['optional', '?'], true)) {
+        if (!in_array($optional ?? null, ['optional', '?'], true)) {
             $validation->null();
         }
 

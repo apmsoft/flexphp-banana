@@ -2,6 +2,7 @@
 ## Banana[3.2.0]
 ### - 2025-04-16
 - NullableValidationTrait 클래스 추가 FormValidation Enum 클래스에서 Null 체크 여부 옵션용 trait 클래스
+- NullableValidationTrait 클래스 업데이트
 
 ### - 2025-04-14
 - FidProviderInterface 메소드 파라마터 추가 가능 하도록 업데이트

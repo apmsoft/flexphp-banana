@@ -15,7 +15,7 @@ trait NullableValidationTrait
      *
      * @return Validation
      */
-    public function checkNullOptional(string $column_name, string $column_title, mixed $data = null, string $optional): Validation
+    public function checkNullOptional(string $column_name, string $column_title, mixed $data, string $optional): Validation
     {
         $validation = new Validation($column_name, $column_title, $data);
 

@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.2.0]
+### - 2025-04-17
+- FidInterface deprecated
+
 ### - 2025-04-16
 - NullableValidationTrait 클래스 추가 FormValidation Enum 클래스에서 Null 체크 여부 옵션용 trait 클래스
 - NullableValidationTrait 클래스 업데이트

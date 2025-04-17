@@ -9,8 +9,8 @@ use Flex\Banana\Classes\Log;
 trait FidTrait
 {
     # FidProviderInterface : requied
-    abstract protected function getTable(?string $table): string;
-    abstract protected function getFidColumnName(?string $columnName): string;
+    abstract protected function getTable(): string;
+    abstract protected function getFidColumnName(): string;
 
     # reple 하부메뉴 및 답글에 사용
     # 다단 fid > "9999999997.01" AND fid < "9999999997.0199";

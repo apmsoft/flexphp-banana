@@ -21,7 +21,8 @@
             "Flex\\Banana\\Adapters\\": "adapters",
             "Flex\\Banana\\Interfaces\\": "interfaces",
             "Flex\\Banana\\Traits\\": "traits",
-            "Flex\\Banana\\Utils\\": "utils"
+            "Flex\\Banana\\Utils\\": "utils",
+            "Flex\\Banana\\Task\\": "task"
         }
     }
 }

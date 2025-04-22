@@ -7,7 +7,8 @@ final class TaskFlow extends Model
 {
     public const __version = '1.1.0';
     private mixed $active = null;
-    private ?callable $errorCallback = null;
+
+    private $errorCallback = null;
 
     public function __construct(?array $args = []) {
         parent::__construct($args);
@@ -17,7 +18,7 @@ final class TaskFlow extends Model
     {
         if ($instance instanceof \Closure) {
             try {
-                return $instance($this);
+                return $instance($this)
             } catch (\Throwable $e) {
                 Log::e($e->getMessage() . "\n" . $e->getTraceAsString());
                 if (is_callable($this->errorCallback)) {

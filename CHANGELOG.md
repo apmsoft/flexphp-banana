@@ -3,6 +3,7 @@
 ### - 2025-04-22
 - Flex\Banana\Task QueryBasicTask,QueryDeleteBasicTask,QueryInsertBasicTask,QueryUpdateBasckTask,ValidationBasicTask 정의 및 업데이트
 - TaskFlow 버전 패치
+- Task 클래스들 버그 패치
 
 ### - 2025-04-21
 - Flex\Banana\Task 패키지 추가

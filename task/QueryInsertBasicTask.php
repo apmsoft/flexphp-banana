@@ -8,11 +8,9 @@ use Flex\Banana\Traits\FidTrait;
 
 /**
 $enums = [
-    IdEnum::_ID => [],
-    CategoryEnum::CATEGORY => [],
-    RegiDateEnum::REGI_DATE => [],
-    TitleEnum::TITLE => [],
-    LevelEnum::LEVEL => [\R::arrays('level')]
+    [IdEnum::_ID,[]],
+    [CategoryEnum::CATEGORY,[]],
+    [LevelEnum::LEVEL, [\R::arrays('level')]]
 ];
 */
 class QueryInsertBasicTask
@@ -45,15 +43,15 @@ class QueryInsertBasicTask
         $this->table = $table;
 
         $this->db->beginTransaction();
-        foreach ($this->enums as $enum => $options) {
+        foreach ($this->enums as [$enum, $options]) {
             $columnName = $enum->value;
-            if($enum == FidEnum::FID()){
+            if($enum == FidEnum::FID){
                 $this->db[$columnName] = $this->createParentFid();
             }else{
-                $this->db[$columnName] = $column->filter($requested[$columnName] ?? '', $options);
+                $this->db[$columnName] = $enum->filter($requested[$columnName] ?? '', $options);
             }
         }
-        $db->table($table)->insert();
+        $this->db->table($table)->insert();
         $this->db->commit();
     }
 }

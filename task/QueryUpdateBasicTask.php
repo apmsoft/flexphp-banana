@@ -7,11 +7,9 @@ use Flex\Banana\Classes\Db\DbManager;
 
 /**
 $enums = [
-    IdEnum::_ID => [],
-    CategoryEnum::CATEGORY => [],
-    RegiDateEnum::REGI_DATE => [],
-    TitleEnum::TITLE => [],
-    LevelEnum::LEVEL => [\R::arrays('level')]
+    [IdEnum::_ID,[]],
+    [CategoryEnum::CATEGORY,[]],
+    [LevelEnum::LEVEL, [\R::arrays('level')]]
 ];
 */
 class QueryUpdateBasicTask
@@ -25,11 +23,11 @@ class QueryUpdateBasicTask
     public function execute(string $table, string $where, array $requested) : void 
     {
         $this->db->beginTransaction();
-        foreach ($this->enums as $enum => $options) {
+        foreach ($this->enums as [$enum, $options]) {
             $columnName = $enum->value;
-            $this->db[$columnName] = $column->filter($requested[$columnName] ?? '', $options);
+            $this->db[$columnName] = $enum->filter($requested[$columnName] ?? '', $options);
         }
-        $db->table($table)->where($where)->update();
+        $this->db->table($table)->where($where)->update();
         $this->db->commit();
     }
 }

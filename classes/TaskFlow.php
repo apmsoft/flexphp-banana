@@ -5,7 +5,7 @@ use Flex\Banana\Classes\Model;
 
 final class TaskFlow extends Model
 {
-    public const __version = '1.1.0';
+    public const __version = '1.1.1';
     private mixed $active = null;
 
     private $errorCallback = null;
@@ -18,7 +18,7 @@ final class TaskFlow extends Model
     {
         if ($instance instanceof \Closure) {
             try {
-                return $instance($this)
+                return $instance($this);
             } catch (\Throwable $e) {
                 Log::e($e->getMessage() . "\n" . $e->getTraceAsString());
                 if (is_callable($this->errorCallback)) {
@@ -29,7 +29,7 @@ final class TaskFlow extends Model
         }
 
         $this->active = $instance;
-        return $instance;
+        return $this;  // 변경: 클로저가 아닌 경우 $instance($this) 제거
     }
 
     public function onError(callable $callback): static

@@ -8,11 +8,9 @@ use Flex\Banana\Classes\Db\DbResultSql;
 use Flex\Banana\Classes\Db\DbResultCouch;
 /**
 $enums = [
-    IdEnum::_ID => [],
-    CategoryEnum::CATEGORY => [],
-    RegiDateEnum::REGI_DATE => [],
-    TitleEnum::TITLE => [],
-    LevelEnum::LEVEL => [\R::arrays('level')]
+    [IdEnum::_ID,[]],
+    [CategoryEnum::CATEGORY,[]],
+    [LevelEnum::LEVEL, [\R::arrays('level')]]
 ];
 */
 class QueryBasicTask
@@ -29,7 +27,7 @@ class QueryBasicTask
         while ($row = $result->fetch_assoc())
         {
             $formattedRow = [];
-            foreach ($this->task->enums as $enum => $options) {
+            foreach ($this->enums as [$enum, $options]) {
                 $columnName = $enum->value;
                 $formattedRow[$columnName] = $enum->format($row[$columnName], $options);
             }

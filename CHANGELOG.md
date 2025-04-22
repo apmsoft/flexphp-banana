@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.2.0]
+### - 2025-04-22
+- Flex\Banana\Task QueryBasicTask,QueryDeleteBasicTask,QueryInsertBasicTask,QueryUpdateBasckTask,ValidationBasicTask 정의 및 업데이트
+
 ### - 2025-04-21
 - Flex\Banana\Task 패키지 추가
 - Task basic 클래스들 기본 추가 (페이징,쿼리,토탈,데이터체크)

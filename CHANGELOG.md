@@ -1,6 +1,9 @@
 # Changelog
 ## Banana[3.2.0]
 ### - 2025-04-22
+- util/Requested by reactphp ServerRequestInterface 확장용 클래스 업데이트 v1.0 -> v1.1.0 with 관련 메소드 등 기능 복제 가능하도록 업데이트
+
+### - 2025-04-22
 - Flex\Banana\Task QueryBasicTask,QueryDeleteBasicTask,QueryInsertBasicTask,QueryUpdateBasckTask,ValidationBasicTask 정의 및 업데이트
 - TaskFlow 버전 패치
 - Task 클래스들 버그 패치

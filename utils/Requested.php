@@ -6,7 +6,7 @@ use Psr\Http\Message\ServerRequestInterface;
 # reactphp ServerRequestInterface 용 확장 클래스
 class Requested
 {
-    public const __version = '1.0';
+    public const __version = '1.1.0';
 	private array $params   = [];
 
 	public function __construct(
@@ -33,6 +33,12 @@ class Requested
 
 	public function __call($name, $arguments)
     {
+        if (str_starts_with($name, 'with')) {
+            $newRequest = $this->request->{$name}(...$arguments);
+            $clone = clone $this;
+            $clone->request = $newRequest;
+            return $clone;
+        }
         return call_user_func_array([$this->request, $name], $arguments);
     }
 

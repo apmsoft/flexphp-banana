@@ -1,4 +1,8 @@
 # Changelog
+## Banana[3.2.1]
+### - 2025-04-29
+- JsonDecoder 클래스 추가 장점 : 여러 \\\로 되어 있거나 중첩 같은 것을 json decode 할 수 있도록 기능 추가
+
 ## Banana[3.2.0]
 ### - 2025-04-22
 - util/Requested by reactphp ServerRequestInterface 확장용 클래스 업데이트 v1.0 -> v1.1.0 with 관련 메소드 등 기능 복제 가능하도록 업데이트

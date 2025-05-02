@@ -1,4 +1,10 @@
 # Changelog
+## Banana[3.3.0]
+### - 2025-05-02
+- TaskFlow taskFlow 용 아답터 클래스 추가 기능, 모든 아답터 클래스는 process() 메소드로 실행
+- TaskFlow용 task/Apdapter/JsonAdapter 추가
+- JsonAdapter json 으로 작성된 WorkFlow 를 동작 시킬 수 있는 기능
+
 ## Banana[3.2.1]
 ### - 2025-04-29
 - JsonDecoder 클래스 추가 장점 : 여러 \\\로 되어 있거나 중첩 같은 것을 json decode 할 수 있도록 기능 추가

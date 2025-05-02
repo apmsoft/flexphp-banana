@@ -149,7 +149,7 @@ final class JsonAdapter
 
             Log::d("handleClassStep: 결과: " . json_encode($result));
 
-            // Inject resolved result into context if used in @return resolution
+            // @return 해상도에 사용되는 경우 컨텍스트로 해결 된 결과를 주입.
             foreach ($step['outputs'] ?? [] as $ctxKey => $resultKey) {
                 if (is_string($resultKey) && str_starts_with($resultKey, '@')) {
                     $resolvedKey = substr($resultKey, 1);

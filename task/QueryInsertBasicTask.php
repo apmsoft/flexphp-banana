@@ -8,9 +8,9 @@ use Flex\Banana\Traits\FidTrait;
 
 /**
 $enums = [
-    [IdEnum::_ID,[]],
-    [CategoryEnum::CATEGORY,[]],
-    [LevelEnum::LEVEL, [\R::arrays('level')]]
+    [\\Columns\\IdEnum,[]],
+    [\\Columns\\CategoryEnum,[]],
+    [\\Columns\\LevelEnum, [@arrays.level]]
 ];
 */
 class QueryInsertBasicTask

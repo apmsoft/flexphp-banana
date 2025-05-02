@@ -6,6 +6,9 @@ use Flex\Banana\Utils\Requested;
 use Flex\Banana\Classes\Db\DbManager;
 
 /**
+$enums = [
+    [\\Columns\\IdEnum,[]]
+];
 $chks = []
 */
 class QueryDeleteBasicTask

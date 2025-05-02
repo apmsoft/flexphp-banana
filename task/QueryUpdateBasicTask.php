@@ -7,9 +7,9 @@ use Flex\Banana\Classes\Db\DbManager;
 
 /**
 $enums = [
-    [IdEnum::_ID,[]],
-    [CategoryEnum::CATEGORY,[]],
-    [LevelEnum::LEVEL, [\R::arrays('level')]]
+    [\\Columns\\IdEnum,[]],
+    [\\Columns\\CategoryEnum,[]],
+    [\\Columns\\LevelEnum, [@arrays.level]]
 ];
 */
 class QueryUpdateBasicTask

@@ -5,8 +5,8 @@ use Flex\Banana\Classes\TaskFlow;
 
 /**
 $enums = [
-    [IdEnum::_ID,[]],
-    [LevelEnum::LEVEL => ["optional"]]
+    [\\Columns\\IdEnum,[]],
+    [\\Columns\\LevelEnum => ["optional"]]
 ];
 */
 class ValidationBasicTask

@@ -2,6 +2,7 @@
 ## Banana[3.3.0]
 ### - 2025-05-07
 - TaskFlow용 task/Apdapter/JsonAdapter adapters 패키지로 이동
+- JsonAdapter -> TaskJosnAdapter 로 클래스명 변경
 
 ### - 2025-05-02
 - TaskFlow taskFlow 용 아답터 클래스 추가 기능, 모든 아답터 클래스는 process() 메소드로 실행

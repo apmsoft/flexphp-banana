@@ -4,7 +4,7 @@ namespace Flex\Banana\Adapters;
 use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Log;
 
-final class JsonAdapter
+final class TaskJsonAdapter
 {
     public const __version = '0.2.0';
     private array $workflow;

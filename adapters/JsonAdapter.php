@@ -1,5 +1,5 @@
 <?php
-namespace Flex\Banana\Task\Adapter;
+namespace Flex\Banana\Adapters;
 
 use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Log;

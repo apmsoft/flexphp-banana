@@ -19,7 +19,7 @@ class EnumImportBasicTask
     public function execute(): array
     {
         $result = [];
-        Log::d('** enumClassNames **',$this->enumClassNames);
+        // Log::d('** enumClassNames **',$this->enumClassNames);
 
         foreach ($this->enumClassNames as $enum) {
             Log::d('>> raw enum input', $enum);
@@ -47,7 +47,7 @@ class EnumImportBasicTask
             }
         }
 
-        Log::d('** enumClassNames :: result **',$result);
+        // Log::d('** enumClassNames :: result **',$result);
 
         return $result;
     }

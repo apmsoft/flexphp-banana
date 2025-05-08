@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.2.0';
+    public const __version = '0.3.0';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -19,12 +19,17 @@ final class TaskJsonAdapter
         Log::d("JsonAdapter: 워크플로우 처리 시작.");
         foreach ($this->workflow as $step) {
             Log::d("JsonAdapter: 스텝 실행 중 - " . json_encode($step));
-            match ($step['type'] ?? 'class') {
-                'method' => self::handleMethodStep($flow, $step),
-                'function' => self::handleFunctionStep($flow, $step),
-                'class' => self::handleClassStep($flow, $step),
-                default => throw new \Exception("Unknown step type: " . ($step['type'] ?? '')),
-            };
+            try {
+                match ($step['type'] ?? 'class') {
+                    'method' => self::handleMethodStep($flow, $step),
+                    'function' => self::handleFunctionStep($flow, $step),
+                    'class' => self::handleClassStep($flow, $step),
+                    default => throw new \Exception("Unknown step type: " . ($step['type'] ?? '')),
+                };
+            } catch (\Throwable $e) {
+                Log::e("JsonAdapter: 스텝 처리 중 예외 발생 - " , $e->getMessage());
+                throw new \Exception($e->getMessage());
+            }
         }
         Log::d("JsonAdapter: 워크플로우 처리 완료.");
         return $flow;
@@ -102,80 +107,109 @@ final class TaskJsonAdapter
             return self::resolveContextReference($flow, $v);
         };
 
-        $flow->do(function(TaskFlow $task) use ($step, $resolve) {
-            $class  = $step['class'] ?? null;
-            $method = $step['method'] ?? null;
+        try {
+            $flow->do(function(TaskFlow $task) use ($step, $resolve) {
+                try {
+                    $class  = $step['class'] ?? null;
+                    $method = $step['method'] ?? null;
 
-            if ($class && $class[0] === '@') {
-                $class = $task->{substr($class, 1)} ?? null;
-            }
-
-            if (!class_exists($class)) {
-                throw new \Exception("Class {$class} not found");
-            }
-
-            $constructArgs = [];
-            if (!empty($step['inputs']['@construct'])) {
-                $constructArgs = array_map($resolve, $step['inputs']['@construct']);
-                unset($step['inputs']['@construct']);
-            }
-
-            Log::d("handleClassStep: {$class} 인스턴스 생성 중, 생성자 인자: " . json_encode($constructArgs));
-
-            $instance = new $class(...$constructArgs);
-            $params = array_map($resolve, $step['params'] ?? []);
-
-            if (!empty($step['inputs'])) {
-                foreach ($step['inputs'] as $key => $ref) {
-                    if (isset($task->$ref)) {
-                        $params[$key] = $task->$ref;
+                    if ($class && $class[0] === '@') {
+                        $class = $task->{substr($class, 1)} ?? null;
                     }
-                }
-            }
 
-            Log::d("handleClassStep: {$class}->{$method} 호출 중, 파라미터: " . json_encode($params));
-
-            $result = call_user_func_array([$instance, $method], $params);
-
-            if (!empty($step['property'])) {
-                if (is_object($result) && property_exists($result, $step['property'])) {
-                    $result = $result->{$step['property']};
-                } elseif (is_array($result) && isset($result[$step['property']])) {
-                    $result = $result[$step['property']];
-                } elseif (is_object($instance) && property_exists($instance, $step['property'])) {
-                    $result = $instance->{$step['property']};
-                }
-            }
-
-            Log::d("handleClassStep: 결과: " . json_encode($result));
-
-            // @return 해상도에 사용되는 경우 컨텍스트로 해결 된 결과를 주입.
-            foreach ($step['outputs'] ?? [] as $ctxKey => $resultKey) {
-                if (is_string($resultKey) && str_starts_with($resultKey, '@')) {
-                    $resolvedKey = substr($resultKey, 1);
-                    if (isset($task->{$resolvedKey})) {
-                        $step['outputs'][$ctxKey] = $task->{$resolvedKey};
+                    if (!class_exists($class)) {
+                        throw new \Exception("Class {$class} not found");
                     }
-                }
-            }
 
-            foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
-                if ($resultKey === '@class') {
-                    $task->{$ctxKey} = $instance;
-                } elseif ($resultKey === '@return') {
-                    $task->{$ctxKey} = $result;
-                } elseif (is_array($result) && isset($result[$resultKey])) {
-                    $task->{$ctxKey} = $result[$resultKey];
-                }
-            }
+                    $constructArgs = [];
+                    if (!empty($step['inputs']['@construct'])) {
+                        $constructArgs = array_map($resolve, $step['inputs']['@construct']);
+                        unset($step['inputs']['@construct']);
+                    }
 
-            return $task;
-        });
+                    Log::d("handleClassStep: {$class} 인스턴스 생성 중, 생성자 인자: " . json_encode($constructArgs));
+
+                    $instance = new $class(...$constructArgs);
+                    $params = array_map($resolve, $step['params'] ?? []);
+
+                    if (!empty($step['inputs'])) {
+                        foreach ($step['inputs'] as $key => $ref) {
+                            if (isset($task->$ref)) {
+                                $params[$key] = $task->$ref;
+                            }
+                        }
+                    }
+
+                    Log::d("handleClassStep: {$class}->{$method} 호출 중, 파라미터: " . json_encode($params));
+
+                    $result = call_user_func_array([$instance, $method], $params);
+
+                    if (!empty($step['property'])) {
+                        if (is_object($result) && property_exists($result, $step['property'])) {
+                            $result = $result->{$step['property']};
+                        } elseif (is_array($result) && isset($result[$step['property']])) {
+                            $result = $result[$step['property']];
+                        } elseif (is_object($instance) && property_exists($instance, $step['property'])) {
+                            $result = $instance->{$step['property']};
+                        }
+                    }
+
+                    Log::d("handleClassStep: 결과: " . json_encode($result));
+
+                    // @return 해상도에 사용되는 경우 컨텍스트로 해결 된 결과를 주입.
+                    foreach ($step['outputs'] ?? [] as $ctxKey => $resultKey) {
+                        if (is_string($resultKey) && str_starts_with($resultKey, '@')) {
+                            $resolvedKey = substr($resultKey, 1);
+                            if (isset($task->{$resolvedKey})) {
+                                $step['outputs'][$ctxKey] = $task->{$resolvedKey};
+                            }
+                        }
+                    }
+
+                    foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
+                        if ($resultKey === '@class') {
+                            $task->{$ctxKey} = $instance;
+                        } elseif ($resultKey === '@return') {
+                            $task->{$ctxKey} = $result;
+                        } elseif (is_array($result) && isset($result[$resultKey])) {
+                            $task->{$ctxKey} = $result[$resultKey];
+                        }
+                    }
+
+                    return $task;
+                } catch (\Throwable $e) {
+                    Log::e($e->getMessage());
+                    throw new \Exception($e->getMessage());
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::e("handleClassStep 오류: " . $e->getMessage());
+            throw new \Exception($e->getMessage());
+        }
     }
 
     private static function resolveContextReference(TaskFlow $flow, $value)
     {
-        if (is_string($value) && str_starts_with($value, '@')) {
+        // @task 클래스 참조
+        if ($value === '@task' || $value === '@flow') {
+            return $flow;
+        }
+
+        if (is_string($value) && str_starts_with($value, '@')) 
+        {
+            $parts = explode('::', substr($value, 1), 2);
+            if (count($parts) === 2) {
+                [$ctxKey, $enumKey] = $parts;
+                $ctx = $flow->$ctxKey ?? null;
+                if (is_array($ctx) && isset($ctx[$enumKey])) {
+                    $resolved = $ctx[$enumKey];
+                    if (is_string($resolved) && enum_exists($resolved)) {
+                        return $resolved;
+                    }
+                    return $resolved;
+                }
+            }
+
             $parts = explode('.', substr($value, 1));
             $ctx = isset($flow->{$parts[0]}) ? $flow->{$parts[0]} : null;
             if ($ctx === null) {

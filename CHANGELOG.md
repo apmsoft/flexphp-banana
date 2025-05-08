@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.3.0]
+### - 2025-05-08
+- TaskFlow 관련 클래스들 기능성 향상을 향한 마이너 업데이트
+
 ### - 2025-05-07
 - TaskFlow용 task/Apdapter/JsonAdapter adapters 패키지로 이동
 - JsonAdapter -> TaskJosnAdapter 로 클래스명 변경

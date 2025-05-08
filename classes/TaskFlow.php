@@ -5,7 +5,7 @@ use Flex\Banana\Classes\Model;
 
 final class TaskFlow extends Model
 {
-    public const __version = '1.2.0';
+    public const __version = '1.2.1';
     private mixed $active = null;
     private array $adapters = [];
 
@@ -26,6 +26,7 @@ final class TaskFlow extends Model
                 if (is_callable($this->errorCallback)) {
                     call_user_func($this->errorCallback, $e);
                 }
+                throw $e;
             }
         }
 
@@ -33,15 +34,9 @@ final class TaskFlow extends Model
         return $this;  // 변경: 클로저가 아닌 경우 $instance($this) 제거
     }
 
-    public function adapter(string $name): static
+    public function adapter(string $name)
     {
-        $adapter = $this->adapters[$name] ?? null;
-
-        if (is_object($adapter) && method_exists($adapter, 'process')) {
-            $adapter->process($this);
-        }
-
-        return $this;
+        return $this->adapters[$name] ?? null;
     }
 
     public function registerAdapter(object $adapter): static

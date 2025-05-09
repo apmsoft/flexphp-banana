@@ -8,6 +8,7 @@
 - QueryBasicTask 클래스 update (by deldel07)
 - PagingRelationBasicTask new add
 - TotalRecordBasicTask new add
+- PagingRelationBasicTask upate
 
 ### - 2025-05-08
 - TaskFlow 관련 클래스들 기능성 향상을 향한 마이너 업데이트

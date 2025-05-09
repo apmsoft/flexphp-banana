@@ -7,7 +7,7 @@ use Flex\Banana\Classes\Log;
 
 class PagingRelationBasicTask
 {
-    public const __version = '0.2.0';
+    public const __version = '0.2.1';
 
     public function __construct(
         private TaskFlow $task,
@@ -18,7 +18,7 @@ class PagingRelationBasicTask
     public function execute(int $page_count=10, int $block_limit=5) : array
     {
         $paging   = new Relation( $this->total_record ?? 0, $this->page ?? 1 );
-        $relation = $paging->query( $this->page_count, $this->block_limit )->build()->paging();
+        $relation = $paging->query( $page_count, $block_limit )->build()->paging();
 
         return [
             "page"           => $paging->page,

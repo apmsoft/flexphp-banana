@@ -25,7 +25,8 @@ class QueryBasicTask
             while ($row = $result->fetch_assoc())
             {
                 $formattedRow = [];
-                foreach ($this->enums as $item) {
+                foreach ($this->enums as $item) 
+                {
                     if (!is_array($item) || count($item) === 0) {
                         continue;
                     }

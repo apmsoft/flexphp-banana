@@ -16,6 +16,6 @@ class TotalRecordBasicTask
 
     public function execute(string $table, string $where) : int
     {
-        return $this->db->table( $table )->query()->total();
+        return $this->db->table( $table )->where($where)->total();
     }
 }

@@ -7,7 +7,9 @@ use Flex\Banana\Classes\Log;
 
 class QueryWhereCaseBasicTask
 {
-    public const __version = '0.1.0';
+    public const __version = '0.2.0';
+
+    private mixed $where = '';
 
     public function __construct(
         private TaskFlow $task,
@@ -46,6 +48,7 @@ class QueryWhereCaseBasicTask
 
         foreach($conditions as $casewh){
             list($fieldname, $condition, $value) = $casewh;
+            Log::d($fieldname,$condition,$value);
             $this->dbWhere->case($fieldname, $condition, $value);
         }
 
@@ -54,10 +57,11 @@ class QueryWhereCaseBasicTask
 
     public function __get($propertyName) : mixed
     {
-        $result = '';
-        if($propertyName === 'where'){
-            $result = $this->dbWhere->where;
+        Log::d(__CLASS__, 'propertyName', $propertyName);
+        if ($propertyName === 'where') {
+            $this->where = $this->dbWhere->__get('where');
+            return $this->where;
         }
-        return $result;
+        return null;
     }
 }

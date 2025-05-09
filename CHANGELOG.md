@@ -6,6 +6,7 @@
 - TaskFlow 용 TaskJosnAdapter 클래스 업데이트 @enums::CategoryEnum , @enums::CategoryEnum() 기능 추가
 - QueryWhereCaseBasicTask 클래스 update
 - QueryBasicTask 클래스 update (by deldel07)
+- PagingRelationBasicTask new add
 
 ### - 2025-05-08
 - TaskFlow 관련 클래스들 기능성 향상을 향한 마이너 업데이트

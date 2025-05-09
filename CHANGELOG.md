@@ -2,6 +2,8 @@
 ## Banana[3.3.0]
 ### - 2025-05-09
 - TaskFlow 용 RequestedFetchBasicTask 클래스 추가
+- TaskFlow 용 QueryWhereCaseBasicTask 클래스 추가
+- TaskFlow 용 TaskJosnAdapter 클래스 업데이트 @enums::CategoryEnum , @enums::CategoryEnum() 기능 추가
 
 ### - 2025-05-08
 - TaskFlow 관련 클래스들 기능성 향상을 향한 마이너 업데이트

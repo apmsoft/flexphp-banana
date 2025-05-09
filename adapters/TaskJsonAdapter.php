@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.3.0';
+    public const __version = '0.4.0';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -197,21 +197,35 @@ final class TaskJsonAdapter
 
         if (is_string($value) && str_starts_with($value, '@')) 
         {
+            // @enums::EnumName()
+            if (preg_match('/^@([^:]+)::([^(]+)\(\)$/', $value, $matches)) {
+                [$_, $ctxKey, $enumKey] = $matches;
+                $ctx = $flow->$ctxKey ?? null;
+                if (is_array($ctx) && isset($ctx[$enumKey]) && $ctx[$enumKey] instanceof \BackedEnum) {
+                    return $ctx[$enumKey]->value;
+                }
+            }
+
+            // @enums::EnumName || @object::property
             $parts = explode('::', substr($value, 1), 2);
             if (count($parts) === 2) {
                 [$ctxKey, $enumKey] = $parts;
                 $ctx = $flow->$ctxKey ?? null;
-                if (is_array($ctx) && isset($ctx[$enumKey])) {
+                if (is_array($ctx) && array_key_exists($enumKey, $ctx)) {
                     $resolved = $ctx[$enumKey];
                     if (is_string($resolved) && enum_exists($resolved)) {
+                        return $resolved::cases()[0];
+                    }
+                    if ($resolved instanceof \UnitEnum) {
                         return $resolved;
                     }
                     return $resolved;
                 }
             }
 
+            // @object.property.subkey
             $parts = explode('.', substr($value, 1));
-            $ctx = isset($flow->{$parts[0]}) ? $flow->{$parts[0]} : null;
+            $ctx = $flow->{$parts[0]} ?? null;
             if ($ctx === null) {
                 Log::w("resolveContextReference: '{$value}' → null (not found)");
             }

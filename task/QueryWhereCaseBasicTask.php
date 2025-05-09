@@ -45,7 +45,7 @@ class QueryWhereCaseBasicTask
         $this->dbWhere->begin($coordCase);
 
         foreach($conditions as $casewh){
-            ["fieldname","condition","value"] = $casewh;
+            list($fieldname, $condition, $value) = $casewh;
             $this->dbWhere->case($fieldname, $condition, $value);
         }
 

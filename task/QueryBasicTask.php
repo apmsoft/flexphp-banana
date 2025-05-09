@@ -10,7 +10,7 @@ use Flex\Banana\Classes\Log;
 
 class QueryBasicTask
 {
-    public const __version = '0.3.0';
+    public const __version = '0.2.0';
 
     public function __construct(
         private TaskFlow $task,
@@ -18,11 +18,10 @@ class QueryBasicTask
         private array $enums
     ){}
 
-    public function execute(string $table, string $where) : array
+    public function execute(DbResultCouch | DbResultSql $result) : array
     {
         $data = [];
         try {
-            $row = $this->db->table( $table )->where($where)->query();
             while ($row = $result->fetch_assoc())
             {
                 $formattedRow = [];
@@ -51,7 +50,6 @@ class QueryBasicTask
 
             return $data;
         } catch (\Exception $e) {
-            Log::e($e->getMessage());
             throw new \Exception($e->getMessage());
         }
     }

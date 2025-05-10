@@ -22,7 +22,7 @@ class EnumImportBasicTask
         // Log::d('** enumClassNames **',$this->enumClassNames);
 
         foreach ($this->enumClassNames as $enum) {
-            Log::d('>> raw enum input', $enum);
+            Log::d('>> import enum class', $enum);
 
             if (!is_string($enum)) {
                 Log::w("Skipped non-string enum: " . json_encode($enum));

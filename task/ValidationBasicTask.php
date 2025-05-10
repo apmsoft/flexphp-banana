@@ -6,13 +6,13 @@ use Flex\Banana\Classes\Log;
 
 class ValidationBasicTask
 {
-    public const __version = '0.2.0';
+    public const __version = '0.2.1';
 
     public function __construct(
         private TaskFlow $task,
         private array $enums
     ){
-        Log::d("** ValidationBasicTask enums", $this->enums);
+        // Log::d("** ValidationBasicTask enums", $this->enums);
     }
 
     public function execute(array $requested) : void

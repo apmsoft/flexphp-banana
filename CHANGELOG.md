@@ -1,4 +1,10 @@
 # Changelog
+## Banana[3.4.0]
+### - 2025-05-09
+- QueryBasicTask remove
+- QuerySelectBasicTask new add
+- TaskFlow 관련 Task 클래스 정식 출시
+
 ## Banana[3.3.0]
 ### - 2025-05-09
 - TaskFlow 용 RequestedFetchBasicTask 클래스 추가

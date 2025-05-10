@@ -7,7 +7,7 @@ use Flex\Banana\Classes\Log;
 
 class PagingRelationBasicTask
 {
-    public const __version = '0.2.1';
+    public const __version = '0.2.2';
 
     public function __construct(
         private TaskFlow $task,
@@ -28,6 +28,7 @@ class PagingRelationBasicTask
             "totalRecord"    => $paging->totalRecord,
             "blockStartPage" => $paging->blockStartPage,
             "blockEndPage"   => $paging->blockEndPage,
+            "relation"       => $relation
         ];
     }
 }

@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.5.5';
+    public const __version = '0.6.0';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -16,7 +16,7 @@ final class TaskJsonAdapter
 
     public function process(TaskFlow $flow): TaskFlow
     {
-        Log::d(PHP_EOL."JsonAdapter: 워크플로우 처리 시작.");
+        Log::d("====> JsonAdapter: 워크플로우 처리 시작.");
 
         $index = 0;
         $count = count($this->workflow);
@@ -37,24 +37,12 @@ final class TaskJsonAdapter
             try {
                 $type = $step['type'] ?? 'class';
 
-                // if 조건 분기 처리
-                if ($type === 'if')
-                {
-                    $condition = self::resolveContextReference($flow, $step['condition'] ?? '');
-                    $outputs = $step['outputs'] ?? [];
-
-                    $nextId = $outputs[$condition] ?? ($outputs['default'] ?? null);
-                    if ($nextId && isset($idMap[$nextId])) {
-                        // id = $ nextid로 단계로 이동하십시오
-                        foreach ($this->workflow as $i => $s) {
-                            if (isset($s['id']) && $s['id'] === $nextId) {
-                                $index = $i;
-                                continue 2;
-                            }
-                        }
-                        throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
-                    } else {
-                        throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
+                // switch/if 조건 분기 처리
+                if ($type === 'switch' || $type === 'if') {
+                    $newIndex = $this->handleConditionalStep($flow, $step, $idMap);
+                    if ($newIndex !== null) {
+                        $index = $newIndex;
+                        continue;
                     }
                 }
 
@@ -66,20 +54,10 @@ final class TaskJsonAdapter
                     default => throw new \Exception("Unknown step type: " . $type),
                 };
 
-                // go 지정 시 다음 id로 점프
-                if (isset($step['go'])) {
-                    $nextId = $step['go'];
-                    if (isset($idMap[$nextId])) {
-                        foreach ($this->workflow as $i => $s) {
-                            if (isset($s['id']) && $s['id'] === $nextId) {
-                                $index = $i;
-                                continue 2;
-                            }
-                        }
-                        throw new \Exception("Go step id '{$nextId}' not found");
-                    } else {
-                        throw new \Exception("Go step id '{$nextId}' not found");
-                    }
+                $newIndex = $this->handleGoStep($step, $idMap);
+                if ($newIndex !== null) {
+                    $index = $newIndex;
+                    continue;
                 }
 
             } catch (\Throwable $e) {
@@ -90,7 +68,7 @@ final class TaskJsonAdapter
             $index++;
         }
 
-        Log::d("JsonAdapter: 워크플로우 처리 완료".PHP_EOL);
+        Log::d("<---- JsonAdapter: 워크플로우 처리 완료".PHP_EOL);
         return $flow;
     }
 
@@ -101,8 +79,22 @@ final class TaskJsonAdapter
         $objectName = $step['object'];
         $method     = $step['method'];
         $params     = array_map($resolve, $step['params'] ?? []);
-        $target     = $flow->$objectName ?? null;
 
+        if (str_starts_with($objectName, 'enum::')) {
+            $enumKey = substr($objectName, strlen('enum::'));
+
+            if (enum_exists($enumKey)) {
+                $target = $enumKey::cases()[0];
+            }
+            // 기본 네임 스페이스 폴백
+            elseif (enum_exists("\\Columns\\{$enumKey}")) {
+                $target = ("\\Columns\\{$enumKey}")::cases()[0];
+            } else {
+                throw new \Exception("Enum class {$enumKey} not found");
+            }
+        } else {
+            $target = $flow->$objectName ?? null;
+        }
         Log::d("handleMethodStep: {$objectName}->{$method} 호출 중, 파라미터: " . json_encode($params));
 
         if (!is_object($target) || (!is_callable([$target, $method]) && !method_exists($target, '__call'))) {
@@ -110,7 +102,6 @@ final class TaskJsonAdapter
         }
 
         $result = call_user_func_array([$target, $method], $params);
-
         Log::d("handleMethodStep: 결과: " . json_encode($result));
 
         foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
@@ -128,19 +119,41 @@ final class TaskJsonAdapter
         };
 
         $function = $step['function'] ?? null;
-        if (!$function || !is_callable($function)) {
+        if (!$function) {
+            throw new \Exception("Function '{$function}' not callable.");
+        }
+
+        // 열거적인 방법 호출 지원
+        if (!empty($step['method']) && str_contains($function, '::')) {
+            [$cls, $case] = explode('::', $function);
+            if (enum_exists($cls)) {
+                $enumInstance = constant("{$cls}::{$case}");
+                $method = $step['method'];
+                if (method_exists($enumInstance, $method)) {
+                    $params = array_map($resolve, $step['params'] ?? []);
+                    $result = call_user_func_array([$enumInstance, $method], $params);
+                    Log::d("handleFunctionStep (enum): {$cls}::{$case}->{$method} 호출 결과: " . json_encode($result));
+                    foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
+                        $flow->$ctxKey = $resultKey === '@return' ? $result : null;
+                    }
+                    return;
+                } else {
+                    throw new \Exception("Method {$method} not found on enum {$cls}");
+                }
+            }
+        }
+
+        if (!is_callable($function)) {
             throw new \Exception("Function '{$function}' not callable.");
         }
 
         $params = array_map($resolve, $step['params'] ?? []);
-
         Log::d("handleFunctionStep: 함수 {$function} 호출 중, 파라미터: " . json_encode($params));
 
         $result = call_user_func_array($function, $params);
-
         Log::d("handleFunctionStep: 결과: " . json_encode($result));
 
-        // Support extracting a property from the result object if 'property' is set
+        // '속성'이 설정된 경우 결과 오브젝트에서 속성 추출 지원
         if (!empty($step['property']) && is_object($result) && property_exists($result, $step['property'])) {
             $result = $result->{$step['property']};
         }
@@ -185,12 +198,10 @@ final class TaskJsonAdapter
                         $constructArgs = array_map($resolve, $step['inputs']['@construct']);
                         unset($step['inputs']['@construct']);
                     }
-
                     Log::d("handleClassStep: {$class} 인스턴스 생성 중, 생성자 인자: " . json_encode($constructArgs));
 
                     $instance = new $class(...$constructArgs);
                     $params = array_map($resolve, $step['params'] ?? []);
-
                     if (!empty($step['inputs'])) {
                         foreach ($step['inputs'] as $key => $ref) {
                             if (isset($task->$ref)) {
@@ -198,11 +209,9 @@ final class TaskJsonAdapter
                             }
                         }
                     }
-
                     Log::d("handleClassStep: {$class}->{$method} 호출 중, 파라미터: " . json_encode($params));
 
                     $result = call_user_func_array([$instance, $method], $params);
-
                     if (!empty($step['property'])) {
                         if (is_object($result) && property_exists($result, $step['property'])) {
                             $result = $result->{$step['property']};
@@ -212,7 +221,6 @@ final class TaskJsonAdapter
                             $result = $instance->{$step['property']};
                         }
                     }
-
                     Log::d("handleClassStep: 결과: " . json_encode($result));
 
                     // @return 해상도에 사용되는 경우 컨텍스트로 해결 된 결과를 주입.
@@ -328,8 +336,73 @@ final class TaskJsonAdapter
                 }
             }
             return $ctx;
+
+            // @enum::IdEnum.value 또는 @enum::IdEnum()
+            if (preg_match('/^enum::([a-zA-Z0-9_\\\\]+)(?:\.(\w+))?$/', $ref, $match)) {
+                $enumClass = $match[1];
+                $enumProp = $match[2] ?? null;
+
+                // 네임스페이스 보완
+                if (!enum_exists($enumClass) && enum_exists("\\Columns\\{$enumClass}")) {
+                    $enumClass = "\\Columns\\{$enumClass}";
+                }
+
+                if (!enum_exists($enumClass)) {
+                    Log::w("resolveContextReference:", $ref, "→ enum class not found");
+                    return null;
+                }
+
+                $enumInstance = $enumClass::cases()[0];
+
+                if ($enumProp === 'value') {
+                    return $enumInstance->value;
+                } elseif ($enumProp && method_exists($enumInstance, $enumProp)) {
+                    return $enumInstance->{$enumProp}(); // 메서드 실행
+                } elseif ($enumProp) {
+                    return $enumInstance->{$enumProp} ?? null; // 속성
+                }
+
+                return $enumInstance; // 기본 객체 반환
+            }
         }
 
         return $value;
+    }
+
+    private function handleConditionalStep(TaskFlow $flow, array $step, array $idMap): ?int
+    {
+        $condition = self::resolveContextReference($flow, $step['condition'] ?? '');
+        $outputs = $step['outputs'] ?? [];
+
+        $nextId = $outputs[$condition] ?? ($outputs['default'] ?? null);
+        if ($nextId && isset($idMap[$nextId])) {
+            foreach ($this->workflow as $i => $s) {
+                if (isset($s['id']) && $s['id'] === $nextId) {
+                    return $i;
+                }
+            }
+            throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
+        } else {
+            throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
+        }
+    }
+
+    private function handleGoStep(array $step, array $idMap): ?int
+    {
+        if (!isset($step['go'])) {
+            return null;
+        }
+
+        $nextId = $step['go'];
+        if (isset($idMap[$nextId])) {
+            foreach ($this->workflow as $i => $s) {
+                if (isset($s['id']) && $s['id'] === $nextId) {
+                    return $i;
+                }
+            }
+            throw new \Exception("Go step id '{$nextId}' not found");
+        } else {
+            throw new \Exception("Go step id '{$nextId}' not found");
+        }
     }
 }

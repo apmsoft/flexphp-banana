@@ -9,14 +9,13 @@ use Flex\Banana\Classes\Log;
 
 class QueryInsertBasicTask
 {
-    public const __version = '0.2.1';
+    public const __version = '0.3.0';
     use FidTrait;
-
-    private $table = '';
 
     public function __construct(
         private TaskFlow $task,
         private DbManager $db,
+        private string $table,
         private array $enums
     ) {}
 
@@ -32,10 +31,8 @@ class QueryInsertBasicTask
         return "fid";
     }
 
-    public function execute(string $table, array $requested): void
+    public function execute(array $requested): void
     {
-        $this->table = $table;
-
         try {
             $this->db->beginTransaction();
 
@@ -66,7 +63,7 @@ class QueryInsertBasicTask
                 }
             }
 
-            $this->db->table($table)->insert();
+            $this->db->table($this->table)->insert();
             $this->db->commit();
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());

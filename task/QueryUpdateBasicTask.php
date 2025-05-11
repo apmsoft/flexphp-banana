@@ -7,19 +7,32 @@ use Flex\Banana\Classes\Db\DbManager;
 
 class QueryUpdateBasicTask
 {
-    public const __version = '0.2.0';
+    public const __version = '0.3.0';
 
     public function __construct(
         private TaskFlow $task,
         private DbManager $db,
+        private string $table,
         private array $enums
     ){}
 
-    public function execute(string $table, string $where, array $requested) : void 
+    private function _where(string | array $where) : void {
+        if (!empty($where))
+        {
+            if(is_string($where)){
+                $this->db->where($where);
+            }
+            else if(is_array($where)){
+                $this->db->where(...$where);
+            }
+        }
+    }
+
+    public function execute(string | array $where, array $requested) : void
     {
         try {
             $this->db->beginTransaction();
-            foreach ($this->enums as $item) 
+            foreach ($this->enums as $item)
             {
                 if (!is_array($item) || count($item) === 0) {
                     continue;
@@ -40,7 +53,7 @@ class QueryUpdateBasicTask
                 $columnName = $enum->value;
                 $this->db[$columnName] = $enum->filter($requested[$columnName] ?? '', ...$options);
             }
-            $this->db->table($table)->where($where)->update();
+            $this->db->table($this->table)->where($this->_where($where))->update();
             $this->db->commit();
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());

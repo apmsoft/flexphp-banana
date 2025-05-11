@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.4.0';
+    public const __version = '0.5.0';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -17,20 +17,79 @@ final class TaskJsonAdapter
     public function process(TaskFlow $flow): TaskFlow
     {
         Log::d("JsonAdapter: 워크플로우 처리 시작.");
+
+        $index = 0;
+        $count = count($this->workflow);
+
+        // idMap: id => step (for fast lookup)
+        $idMap = [];
         foreach ($this->workflow as $step) {
+            if (isset($step['id'])) {
+                $idMap[$step['id']] = $step;
+            }
+        }
+
+        while ($index < $count)
+        {
+            $step = $this->workflow[$index];
             Log::d("JsonAdapter: 스텝 실행 중 - " . json_encode($step));
+
             try {
-                match ($step['type'] ?? 'class') {
+                $type = $step['type'] ?? 'class';
+
+                // if 조건 분기 처리
+                if ($type === 'if')
+                {
+                    $condition = self::resolveContextReference($flow, $step['condition'] ?? '');
+                    $outputs = $step['outputs'] ?? [];
+
+                    $nextId = $outputs[$condition] ?? ($outputs['default'] ?? null);
+                    if ($nextId && isset($idMap[$nextId])) {
+                        // id = $ nextid로 단계로 이동하십시오
+                        foreach ($this->workflow as $i => $s) {
+                            if (isset($s['id']) && $s['id'] === $nextId) {
+                                $index = $i;
+                                continue 2;
+                            }
+                        }
+                        throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
+                    } else {
+                        throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
+                    }
+                }
+
+                // 일반 실행 처리
+                match ($type) {
                     'method' => self::handleMethodStep($flow, $step),
                     'function' => self::handleFunctionStep($flow, $step),
                     'class' => self::handleClassStep($flow, $step),
-                    default => throw new \Exception("Unknown step type: " . ($step['type'] ?? '')),
+                    default => throw new \Exception("Unknown step type: " . $type),
                 };
+
+                // go 지정 시 다음 id로 점프
+                if (isset($step['go'])) {
+                    $nextId = $step['go'];
+                    if (isset($idMap[$nextId])) {
+                        foreach ($this->workflow as $i => $s) {
+                            if (isset($s['id']) && $s['id'] === $nextId) {
+                                $index = $i;
+                                continue 2;
+                            }
+                        }
+                        throw new \Exception("Go step id '{$nextId}' not found");
+                    } else {
+                        throw new \Exception("Go step id '{$nextId}' not found");
+                    }
+                }
+
             } catch (\Throwable $e) {
-                Log::e("JsonAdapter: 스텝 처리 중 예외 발생 - " , $e->getMessage());
+                Log::e("JsonAdapter: 스텝 처리 중 예외 발생 - ", $e->getMessage());
                 throw new \Exception($e->getMessage());
             }
+
+            $index++;
         }
+
         Log::d("JsonAdapter: 워크플로우 처리 완료.");
         return $flow;
     }

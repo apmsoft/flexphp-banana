@@ -1,5 +1,9 @@
 # Changelog
 ## Banana[3.4.0]
+### - 2025-05-11
+- TaskJsonAdapter class update (if,go 기능 추가)
+- ExceptionBaskTask 예외처리용 클래스 추가
+
 ### - 2025-05-10
 - QueryBasicTask remove
 - QuerySelectBasicTask new add

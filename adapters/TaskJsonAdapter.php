@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.5.0';
+    public const __version = '0.5.5';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -16,7 +16,7 @@ final class TaskJsonAdapter
 
     public function process(TaskFlow $flow): TaskFlow
     {
-        Log::d("JsonAdapter: 워크플로우 처리 시작.");
+        Log::d(PHP_EOL."JsonAdapter: 워크플로우 처리 시작.");
 
         $index = 0;
         $count = count($this->workflow);
@@ -90,7 +90,7 @@ final class TaskJsonAdapter
             $index++;
         }
 
-        Log::d("JsonAdapter: 워크플로우 처리 완료.");
+        Log::d("JsonAdapter: 워크플로우 처리 완료".PHP_EOL);
         return $flow;
     }
 
@@ -249,15 +249,44 @@ final class TaskJsonAdapter
 
     private static function resolveContextReference(TaskFlow $flow, $value)
     {
-        // @task 클래스 참조
         if ($value === '@task' || $value === '@flow') {
             return $flow;
         }
 
-        if (is_string($value) && str_starts_with($value, '@')) 
+        if (is_string($value) && str_starts_with($value, '@'))
         {
+            $ref = substr($value, 1);
+
+            // ENV::
+            if (str_starts_with($ref, 'ENV::')) {
+                return getenv(substr($ref, 5)) ?: null;
+            }
+
+            // DEFINE::
+            if (str_starts_with($ref, 'DEFINE::')) {
+                $const = substr($ref, 8);
+                return defined($const) ? constant($const) : null;
+            }
+
+            // R::method.key1.key2
+            if (preg_match('/^R::([a-zA-Z_]+)((?:\.[a-zA-Z0-9_]+)*)$/', $ref, $match)) {
+                $method = $match[1];
+                $path = ltrim($match[2], '.');
+                $args = explode('.', $path);
+                $base = call_user_func(['\\Flex\\Banana\\Classes\\R', $method], $args[0] ?? null);
+
+                foreach (array_slice($args, 1) as $key) {
+                    if (is_array($base) && array_key_exists($key, $base)) {
+                        $base = $base[$key];
+                    } else {
+                        return null;
+                    }
+                }
+                return $base;
+            }
+
             // @enums::EnumName()
-            if (preg_match('/^@([^:]+)::([^(]+)\(\)$/', $value, $matches)) {
+            if (preg_match('/^([^:]+)::([^(]+)\(\)$/', $ref, $matches)) {
                 [$_, $ctxKey, $enumKey] = $matches;
                 $ctx = $flow->$ctxKey ?? null;
                 if (is_array($ctx) && isset($ctx[$enumKey]) && $ctx[$enumKey] instanceof \BackedEnum) {
@@ -266,7 +295,7 @@ final class TaskJsonAdapter
             }
 
             // @enums::EnumName || @object::property
-            $parts = explode('::', substr($value, 1), 2);
+            $parts = explode('::', $ref, 2);
             if (count($parts) === 2) {
                 [$ctxKey, $enumKey] = $parts;
                 $ctx = $flow->$ctxKey ?? null;
@@ -283,23 +312,24 @@ final class TaskJsonAdapter
             }
 
             // @object.property.subkey
-            $parts = explode('.', substr($value, 1));
+            $parts = explode('.', $ref);
             $ctx = $flow->{$parts[0]} ?? null;
             if ($ctx === null) {
-                Log::w("resolveContextReference: '{$value}' → null (not found)");
+                Log::w("resolveContextReference:", $value, "→ null (not found)");
             }
             foreach (array_slice($parts, 1) as $key) {
                 if ($ctx === null) {
-                    Log::w("resolveContextReference: '{$value}' → null (not found)");
+                    Log::w("resolveContextReference:", $value, "→ null (not found)");
                     break;
                 }
                 $ctx = is_array($ctx) && isset($ctx[$key]) ? $ctx[$key] : null;
                 if ($ctx === null) {
-                    Log::w("resolveContextReference: '{$value}' → null (not found)");
+                    Log::w("resolveContextReference:", $value, "→ null (not found)");
                 }
             }
             return $ctx;
         }
+
         return $value;
     }
 }

@@ -3,6 +3,7 @@
 ### - 2025-05-11
 - TaskJsonAdapter class update (if,go 기능 추가)
 - ExceptionBaskTask 예외처리용 클래스 추가
+- TaskJsonAdpater ENV,DEFINE,R::* static global 변수에 바로 접근할 수 있도록 예약어 추가
 
 ### - 2025-05-10
 - QueryBasicTask remove

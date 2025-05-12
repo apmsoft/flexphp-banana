@@ -7,7 +7,7 @@ use Flex\Banana\Classes\Log;
 
 class QueryDeleteBasicTask
 {
-    public const __version = '0.2.0';
+    public const __version = '0.2.1';
 
     public function __construct(
         private TaskFlow $task,
@@ -31,10 +31,10 @@ class QueryDeleteBasicTask
 
     public function execute(string | array $where) : void
     {
-        Log::d("***", $where);
+        // Log::d("***", $where);
         $_where = $this->_where($where['where'] ?? '');
-        Log::d('_where', $_where);
-        Log::d($this->db->table($this->table)->where($_where)->query);
+        // Log::d('_where', $_where);
+        // Log::d($this->db->table($this->table)->where($_where)->query);
         if($_where)
         {
             try{

@@ -29,11 +29,12 @@ class QueryDeleteBasicTask
 
     public function execute(string | array $where) : void
     {
-        if(!empty($this->_where($where)))
+        $_where = $this->_where($where);
+        if(!empty($_where))
         {
             try{
                 $this->db->beginTransaction();
-                $this->db->table($this->table)->where()->delete();
+                $this->db->table($this->table)->where($_where)->delete();
                 $this->db->commit();
             }catch(\Exception $e){
                 Log::e($e->getMessage());

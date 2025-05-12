@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.6.0';
+    public const __version = '0.6.1';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -150,7 +150,32 @@ final class TaskJsonAdapter
         $params = array_map($resolve, $step['params'] ?? []);
         Log::d("handleFunctionStep: 함수 {$function} 호출 중, 파라미터: " . json_encode($params));
 
-        $result = call_user_func_array($function, $params);
+        // 변수 참조해야 하는 함수들  지원 (확장됨)
+        if (in_array($function, ['array_push', 'array_unshift', 'array_shift', 'array_pop', 'sort', 'rsort', 'asort', 'ksort', 'usort', 'array_reverse'], true)) {
+            if (!empty($params) && is_array($params[0])) {
+                $ref = &$params[0];  // ✅ 참조
+
+                if (in_array($function, ['sort', 'rsort', 'asort', 'ksort', 'usort'], true)) {
+                    $function($ref);
+                    $result = $ref;
+                } else {
+                    $result = $function($ref);
+                }
+
+                // ✅ 이 라인 중요: 결과 배열을 다시 flow에 반영
+                foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
+                    if ($resultKey === '@return') {
+                        $flow->$ctxKey = $result;
+                    } elseif ($resultKey === 'self') {
+                        $flow->$ctxKey = $ref;  // ✅ 참조 배열로 덮어쓰기
+                    }
+                }
+            } else {
+                throw new \Exception("{$function} requires the first parameter to be an array.");
+            }
+        } else {
+            $result = call_user_func_array($function, $params);
+        }
         Log::d("handleFunctionStep: 결과: " . json_encode($result));
 
         // '속성'이 설정된 경우 결과 오브젝트에서 속성 추출 지원
@@ -160,6 +185,7 @@ final class TaskJsonAdapter
 
         foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
             if ($resultKey === '@return') {
+                // 항상 컨텍스트에 최신 결과 반영
                 $flow->$ctxKey = $result;
             } elseif (is_string($resultKey) && str_starts_with($resultKey, '@')) {
                 $resolvedKey = substr($resultKey, 1);

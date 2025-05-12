@@ -7,7 +7,7 @@ use Flex\Banana\Classes\Log;
 
 class QueryDeleteBasicTask
 {
-    public const __version = '0.1.0';
+    public const __version = '0.2.0';
 
     public function __construct(
         private TaskFlow $task,
@@ -15,30 +15,38 @@ class QueryDeleteBasicTask
         private string $table
     ){}
 
-    private function _where(string | array $where) : void {
-        if (!empty($where))
-        {
-            if(is_string($where)){
-                $this->db->where($where);
-            }
-            else if(is_array($where)){
-                $this->db->where(...$where);
-            }
+    private function _where(string|array $where): string|null {
+        if (empty($where)) return null;
+
+        if (is_string($where)) {
+            return $where;
         }
+
+        if (is_array($where)) {
+            return $this->db->buildWhere($where);
+        }
+
+        return null;
     }
 
     public function execute(string | array $where) : void
     {
-        $_where = $this->_where($where);
-        if(!empty($_where))
+        Log::d("***", $where);
+        $_where = $this->_where($where['where'] ?? '');
+        Log::d('_where', $_where);
+        Log::d($this->db->table($this->table)->where($_where)->query);
+        if($_where)
         {
             try{
-                $this->db->beginTransaction();
-                $this->db->table($this->table)->where($_where)->delete();
-                $this->db->commit();
+                $data = $this->db->table($this->table)->where($_where)->query()->fetch_assoc();
+                if($data){
+                    $this->db->beginTransaction();
+                    $this->db->table($this->table)->where($_where)->delete();
+                    $this->db->commit();
+                }
             }catch(\Exception $e){
                 Log::e($e->getMessage());
-                throw new \Exception($e->getMessage());
+                // throw new \Exception($e->getMessage());
             }
         }
     }

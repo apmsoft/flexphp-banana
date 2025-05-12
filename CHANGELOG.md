@@ -2,6 +2,7 @@
 ## Banana[3.5.1]
 ### - 2025-05-12
 - QueryDeleteBasicTask.php update
+- TaskJsonAdapter 클래스 업데이트 ( 변수를 참조해야 하는 배열 함수 기능활성화 array_pop...)
 
 ### - 2025-05-11
 - TaskJsonAdapter class update (if,go,switch 기능 추가)

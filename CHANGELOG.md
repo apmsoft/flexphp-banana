@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.0]
+### - 2025-05-12
+- QueryDeleteBasicTask.php update
+
 ### - 2025-05-11
 - TaskJsonAdapter class update (if,go,switch 기능 추가)
 - Query*Task 클래스들 업데이트

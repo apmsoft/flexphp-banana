@@ -55,8 +55,7 @@ class QueryInsertBasicTask
                 }
 
                 $columnName = $enum->value;
-
-                if ($columnName == "fid") {
+                if ($columnName == $this->getFidColumnName()) {
                     $this->db[$columnName] = $this->createParentFid();
                 } else {
                     $this->db[$columnName] = $enum->filter($requested[$columnName] ?? '', ...$options);

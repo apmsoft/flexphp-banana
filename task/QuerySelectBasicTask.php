@@ -145,7 +145,12 @@ class QuerySelectBasicTask
                     }
 
                     $columnName = $enum->value;
-                    $formattedRow[$columnName] = $enum->format($row[$columnName] ?? '', ...$options);
+                    if ($columnName == $this->getFidColumnName()) {
+                        $formattedRow[$columnName] = $enum->format($row[$columnName] ?? '', ...$options);
+                        $formattedRow["depth"]     = $this->getDepthCount($row[$columnName]);
+                    }else{
+                        $formattedRow[$columnName] = $enum->format($row[$columnName] ?? '', ...$options);
+                    }
                 }
                 $data[] = $formattedRow;
             }

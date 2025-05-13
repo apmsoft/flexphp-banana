@@ -1,5 +1,13 @@
 # Changelog
-## Banana[3.5.1]
+## Banana[3.5.2]
+### - 2025-05-13
+- QueryDeleteBasicTask.php update
+- QueryInsertBasicTask.php update
+- QueryReplyBasicTask.php new add
+- QuerySelectBasicTask.php update
+- SortByFidBasicTask.php new add
+- FidTarit pgsql 관련 패치 업데이트
+
 ### - 2025-05-12
 - QueryDeleteBasicTask.php update
 - TaskJsonAdapter 클래스 업데이트 ( 변수를 참조해야 하는 배열 함수 기능활성화 array_pop...)

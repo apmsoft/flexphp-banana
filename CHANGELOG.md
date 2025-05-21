@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.2]
+### - 2025-05-21
+- HttpRequestTask new add
+
 ### - 2025-05-13
 - QueryDeleteBasicTask.php update
 - QueryInsertBasicTask.php update

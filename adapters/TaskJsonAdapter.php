@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.6.1';
+    public const __version = '0.7.1';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -283,7 +283,7 @@ final class TaskJsonAdapter
 
     private static function resolveContextReference(TaskFlow $flow, $value)
     {
-        if ($value === '@task' || $value === '@flow') {
+        if ($value === '@task') {
             return $flow;
         }
 
@@ -415,7 +415,7 @@ final class TaskJsonAdapter
 
     private function handleGoStep(array $step, array $idMap): ?int
     {
-        if (!isset($step['go'])) {
+        if (!array_key_exists('go', $step) || $step['go'] === null || $step['go'] === '') {
             return null;
         }
 

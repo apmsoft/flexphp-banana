@@ -1,4 +1,9 @@
 # Changelog
+## Banana[3.5.3]
+### - 2025-05-22
+- TaskJsonAdapter go 관련버그 수정 및 값이 flow 예약어 삭제
+- ExtractTaskFromDfTask 클래스 new add
+
 ## Banana[3.5.2]
 ### - 2025-05-21
 - HttpRequestTask new add

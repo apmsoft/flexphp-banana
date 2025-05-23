@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-    public const __version = '0.7.1';
+    public const __version = '0.7.3';
     private array $workflow;
 
     public function __construct(array $workflow)
@@ -223,6 +223,9 @@ final class TaskJsonAdapter
                     if (!empty($step['inputs']['@construct'])) {
                         $constructArgs = array_map($resolve, $step['inputs']['@construct']);
                         unset($step['inputs']['@construct']);
+                    } elseif (!empty($step['inputs']['construct'])) {
+                        $constructArgs = array_map($resolve, $step['inputs']['construct']);
+                        unset($step['inputs']['construct']);
                     }
                     Log::d("handleClassStep: {$class} 인스턴스 생성 중, 생성자 인자: " . json_encode($constructArgs));
 
@@ -397,20 +400,27 @@ final class TaskJsonAdapter
 
     private function handleConditionalStep(TaskFlow $flow, array $step, array $idMap): ?int
     {
-        $condition = self::resolveContextReference($flow, $step['condition'] ?? '');
+        $condition = (string) self::resolveContextReference($flow, $step['condition'] ?? '');
         $outputs = $step['outputs'] ?? [];
+        Log::d('condition',$condition);
+        print_r($outputs);
 
-        $nextId = $outputs[$condition] ?? ($outputs['default'] ?? null);
+        // 🔐 명시적으로 키 존재 여부 확인
+        if (!array_key_exists($condition, $outputs) && !array_key_exists('default', $outputs)) {
+            throw new \Exception("조건 {$condition}에 해당하는 분기 또는 기본(default) 분기가 없습니다.");
+        }
+
+        $nextId = $outputs[$condition] ?? $outputs['default'];
+        Log::d('nextId',$nextId);
         if ($nextId && isset($idMap[$nextId])) {
             foreach ($this->workflow as $i => $s) {
                 if (isset($s['id']) && $s['id'] === $nextId) {
                     return $i;
                 }
             }
-            throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
-        } else {
-            throw new \Exception("Invalid or missing next step id: " . json_encode($nextId));
         }
+
+        throw new \Exception("다음 단계 ID가 유효하지 않음: " . json_encode($nextId));
     }
 
     private function handleGoStep(array $step, array $idMap): ?int

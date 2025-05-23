@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.3]
+### - 2025-05-23
+- TaskJsonAdapter go 관련버그 업데이트 및 예외메세지 추가
+
 ### - 2025-05-22
 - TaskJsonAdapter go 관련버그 수정 및 값이 flow 예약어 삭제
 - ExtractTaskFromDfTask 클래스 new add

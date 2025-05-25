@@ -1,5 +1,10 @@
 # Changelog
 ## Banana[3.5.3]
+### - 2025-05-25
+- HttpRequest header 속성에 따라 json decode 실행 여부 결정 되도록 업데이트
+- TaskJsonAdapter property 관련버그 업데이트
+- task/HttpRequestTask.php 클래스 파일 업데이트
+
 ### - 2025-05-23
 - TaskJsonAdapter go 관련버그 업데이트 및 예외메세지 추가
 

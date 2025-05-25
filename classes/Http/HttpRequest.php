@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Http;
 use Flex\Banana\Classes\Log;
 
 class HttpRequest {
-    public const __version = '1.2.2';
+    public const __version = '1.3.0';
     private $urls = [];
     private $mch;
 
@@ -108,30 +108,37 @@ class HttpRequest {
             $httpCode = curl_getinfo($ch[$index], CURLINFO_HTTP_CODE);
             $body = curl_multi_getcontent($ch[$index]);
 
+            $contentTypeHeader = curl_getinfo($ch[$index], CURLINFO_CONTENT_TYPE);
+            $isJsonResponse = stripos($contentTypeHeader, 'application/json') !== false;
+
             // 이미 배열인지 확인
             if (is_array($body)) {
                 $decodedBody = $body;
             } else if (is_string($body) && !empty($body)) {
-                // JSON 디코딩 시도
-                $decodedBody = $body; // 기본값으로 원본 설정
-                if (version_compare(PHP_VERSION, '7.3.0', '>=')) {
-                    try {
-                        $tempDecoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-                        if (is_array($tempDecoded)) {
-                            $decodedBody = $tempDecoded;
+                if ($isJsonResponse) {
+                    // JSON 디코딩 시도
+                    $decodedBody = $body; // 기본값으로 원본 설정
+                    if (version_compare(PHP_VERSION, '7.3.0', '>=')) {
+                        try {
+                            $tempDecoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+                            if (is_array($tempDecoded)) {
+                                $decodedBody = $tempDecoded;
+                            }
+                        } catch (\JsonException $e) {
+                            Log::e($index, 'JSON decode error', $e->getMessage());
+                            throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => $body]));
                         }
-                    } catch (\JsonException $e) {
-                        Log::e($index, 'JSON decode error', $e->getMessage());
-                        throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => $body]));
+                    } else {
+                        $tempDecoded = json_decode($body, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($tempDecoded)) {
+                            $decodedBody = $tempDecoded;
+                        } else {
+                            Log::e($index, 'JSON decode error', json_last_error_msg());
+                            throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => json_last_error_msg()]));
+                        }
                     }
                 } else {
-                    $tempDecoded = json_decode($body, true);
-                    if (json_last_error() === JSON_ERROR_NONE && is_array($tempDecoded)) {
-                        $decodedBody = $tempDecoded;
-                    } else {
-                        Log::e($index, 'JSON decode error', json_last_error_msg());
-                        throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => json_last_error_msg()]));
-                    }
+                    $decodedBody = $body;
                 }
             } else {
                 $decodedBody = $body;

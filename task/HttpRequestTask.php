@@ -15,7 +15,6 @@ class HttpRequestTask
 
     public function execute(string $method, array $set): mixed
     {
-        $result = '';
         try{
             $request = new HttpRequest();
 
@@ -37,22 +36,8 @@ class HttpRequestTask
                 "DELETE" => $request->delete(),
                 default  => throw new \Exception("HttpRequestTask::execute - Unsupported method: {$method}")
             };
-            foreach ($responses as $index => $response)
-            {
-                if (!isset($response['code'], $response['body'])) {
-                    throw new \Exception("HttpRequestTask::execute - Invalid response format at index $index");
-                }
 
-                if ($response['code'] === 200) {
-                    $result = $response['body'];
-                } else {
-                    Log::w("HttpRequestTask::execute - Non-200 response", [
-                        'index' => $index,
-                        'code' => $response['code'],
-                        'url' => $response['url'] ?? 'unknown'
-                    ]);
-                }
-            }
+            return $responses;
         }catch(\Exception $e){
             Log::e("HttpRequestTask::execute error", [
                 'message' => $e->getMessage(),
@@ -61,7 +46,5 @@ class HttpRequestTask
             ]);
             throw new \Exception("HttpRequestTask::execute failed: " . $e->getMessage());
         }
-
-    return $result;
     }
 }

@@ -1,12 +1,12 @@
 <?php
-namespace Flex\Banana\Task;
+namespace Flex\Banana\Adapters;
 
 use DOMDocument;
 use DOMXPath;
 use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Log;
 
-final class ExtractTaskFromDfTask
+final class TaskDfToJsonAdapter
 {
     public const __version = '0.1.0';
     public function __construct(

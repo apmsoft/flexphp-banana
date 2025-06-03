@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.3]
+### - 2025-06-03
+- TaskDfToJsonAdapter new add
+
 ### - 2025-05-25
 - HttpRequest header 속성에 따라 json decode 실행 여부 결정 되도록 업데이트
 - TaskJsonAdapter property 관련버그 업데이트

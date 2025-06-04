@@ -3,6 +3,7 @@
 ### - 2025-06-03
 - TaskDfToJsonAdapter new add
 - TaskFlow 용 RouteLoader.php new add, json, database, [t1,v1]등 버전 라우터 주소 기능
+- RouterLoader 확장 가능하도록 클래스 구조화
 
 ### - 2025-05-25
 - HttpRequest header 속성에 따라 json decode 실행 여부 결정 되도록 업데이트

@@ -38,7 +38,7 @@ final class RouteLoader extends DbAdapter
 	/**
 	 * JSON 라우트 파일 불러오기
 	 */
-	public function loadJsonRoutes(): self
+	public function jsonRoutes(): self
 	{
 		$indexPath = "{$this->baseDir}/res/routes/index.json";
 		if (!file_exists($indexPath)) {
@@ -59,7 +59,7 @@ final class RouteLoader extends DbAdapter
 	/**
 	 * DB 기반 라우트 불러오기
 	 */
-	public function loadDbRoutes(string $table): self
+	public function dbRoutes(string $table): self
 	{
 		if($result = $this->db->table($table)->select("url,types,flow")->query()){
 			while ($row = $result->fetch_assoc()){

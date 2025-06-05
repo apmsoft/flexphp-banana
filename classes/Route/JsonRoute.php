@@ -7,17 +7,21 @@ use Flex\Banana\Interfaces\RouteInterface;
 
 class JsonRoute implements RouteInterface 
 {
-  public function __construct(private string $baseDir) {}
+  public function __construct(
+    private string $dir,
+    private string $filename
+  ) {}
 
   #@ RouteInterface
+  # {$this->dir}/res/routes/index.json
   public function getRoutes(): array 
   {
-    $indexPath = "{$this->baseDir}/res/routes/index.json";
+    $indexPath = sprintf("%s/%s", $this->dir, $this->filename);
     if (!file_exists($indexPath)) return [];
     $taskFiles = JsonDecoder::toArray(file_get_contents($indexPath));
     $routes = [];
     foreach ($taskFiles as $file) {
-        $path = "{$this->baseDir}/res/routes/{$file}.json";
+        $path = sprintf("%s/%s.json", $this->dir, $file);
         $routes = array_merge($routes, JsonDecoder::toArray(file_get_contents($path)));
     }
     return $routes;

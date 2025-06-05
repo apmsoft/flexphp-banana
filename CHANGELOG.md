@@ -2,6 +2,7 @@
 ## Banana[3.5.4]
 ### - 2025-06-05
 - FidTrait 클래스 업데이트
+- JsonRoute 디렉토리 및 파일 설정 가능하도록 업데이트
 
 ### - 2025-06-03
 - TaskDfToJsonAdapter new add

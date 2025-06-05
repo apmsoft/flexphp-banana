@@ -17,13 +17,15 @@ trait FidTrait
     public function createChildFid(string $fid) : string
     {
         # 해당 fid 중 가장 큰값 찾기
+        // [$this->getFidColumnName(),'>',$fid],[$this->getFidColumnName(),'<',$fid.'99']
+        $where = sprintf("%s > '%s' AND %s < '%s'",$this->getFidColumnName(), $fid, $this->getFidColumnName(), $fid.'99');
         $fid_max = $this->db->table($this->getTable())
             ->select(sprintf("max(%s)", $this->getFidColumnName()))
-            ->where([$this->getFidColumnName(),'>',$fid],[$this->getFidColumnName(),'<',$fid.'99'])
+            ->where($where)
             ->query()->fetch_row();
 
         # depth
-        $depth  = ((int)substr($fid_max[0],-2) + 1);
+        $depth  = (isset($fid_max[0])) ? ((int)substr($fid_max[0],-2) + 1) : 1;
 
         # result
         return sprintf("%s%02d",$fid, $depth);
@@ -73,18 +75,19 @@ trait FidTrait
 
     # list query
     # FID depth 정렬
-    public function orderBy(?string $asc = 'ASC') : string
+    # mysql : fid+0 asc | pgsql : fid asc
+    public function orderBy(?string $columnName=null,?string $asc = 'ASC') : string
     {
-        return sprintf("%s+0 %s", $this->getFidColumnName(), $asc);
+        return sprintf("%s %s", $columnName ?? $this->getFidColumnName(), $asc);
     }
 
-    # sort down (화살표 위)
-    public function getSortDown (string $fid) : array
+    # 화살표 위
+    public function getSortUp (string $fid) : array
     {
         # current fid array
         $cur_fids = [];
         $cur_rlt = $this->db->table($this->getTable())
-            ->where($this->getFidColumnName(), 'LIKE-R', $fid)
+            ->where( $this->getFidColumnName(), 'LIKE-R', $fid)
             ->orderBy( $this->orderBy() )
             ->query();
         while($cur_row = $cur_rlt->fetch_assoc()){
@@ -112,7 +115,7 @@ trait FidTrait
             // Log::d('pre_fid ->',$pre_fid);
             $pre_row = $this->db->table($this->getTable())
                 ->select($this->getFidColumnName())
-                ->where($this->getFidColumnName(), '>=', $pre_fid)
+                ->where(sprintf("%s >= '%s'",$this->getFidColumnName(), $pre_fid))
                 ->limit(1)
                 ->orderBy( $this->orderBy() )
                 ->query()->fetch_assoc();
@@ -127,6 +130,7 @@ trait FidTrait
                 {
                     # query
                     $pre_rlt = $this->db->table($this->getTable())
+                        ->select('*')
                         ->where($this->getFidColumnName(), 'LIKE-R', $pre_fid)
                         ->orderBy( $this->orderBy() )
                         ->query();
@@ -144,8 +148,8 @@ trait FidTrait
         ];
     }
 
-    # sort up (화살표 다운)
-    public function getSortUp (string $fid) : array
+    # 화살표 다운
+    public function getSortDown (string $fid) : array
     {
         # current fid array
         $cur_fids = [];
@@ -156,17 +160,17 @@ trait FidTrait
         while($cur_row = $cur_rlt->fetch_assoc()){
             $cur_fids[] = $cur_row;
         }
-        // Log::d('cur_fids',$cur_fids);
+        Log::d('cur_fids',$cur_fids);
 
         # > fid array
         $nxt_fids = [];
         $depth = $this->getDepthCount($fid);
         $fids = explode('.',$fid);
         $nxt_fid = ($depth < 1) ? ($fids[0]+1)."." : sprintf("%s%02d",substr($fid,0,-2),((int)substr($fid,-2) + 1));
-        // Log::d('nxt_fid ->',$nxt_fid);
+        Log::d('nxt_fid ->',$nxt_fid);
         $nxt_row = $this->db->table($this->getTable())
             ->select($this->getFidColumnName())
-            ->where($this->getFidColumnName(), '>=', $nxt_fid)
+            ->where(sprintf("%s >= '%s'",$this->getFidColumnName(), $nxt_fid))
             ->limit(1)
             ->orderBy( $this->orderBy() )
             ->query()->fetch_assoc();
@@ -175,19 +179,20 @@ trait FidTrait
             # nxt_fid
             $nxt_fid = $nxt_row[$this->getFidColumnName()];
             $nxt_depth = $this->getDepthCount($nxt_fid);
-            // Log::d('nxt_fid', $nxt_fid,'nxt_depth',$nxt_depth);
+            Log::d('nxt_fid', $nxt_fid,'nxt_depth',$nxt_depth);
 
             if($depth == $nxt_depth)
             {
                 # query
                 $nxt_rlt = $this->db->table($this->getTable())
+                    ->select('*')
                     ->where($this->getFidColumnName(), 'LIKE-R', $nxt_fid)
                     ->orderBy( $this->orderBy() )
                     ->query();
                 while($nxt_row = $nxt_rlt->fetch_assoc()){
                     $nxt_fids[] = $nxt_row;
                 }
-                // Log::d('nxt_fids',$nxt_fids);
+                Log::d('nxt_fids',$nxt_fids);
             }
         }
 
@@ -198,7 +203,7 @@ trait FidTrait
     }
 
     # 데이터베이스의 fid 값 변경 하기
-    public function changeSortFid (array $cur_fids, array $ano_fids, string $using_where_key='id') : array
+    public function changeSortFid (array $cur_fids, array $ano_fids, string $using_where_key='_id') : array
     {
         $result = [];
         # fid change
@@ -207,7 +212,7 @@ trait FidTrait
             # change cur -> ano
             $ano_root_fid = $ano_fids[0][$this->getFidColumnName()];
             $ano_depth = $this->getDepthCount($ano_root_fid);
-            // Log::d('ano', $ano_root_fid, $ano_depth);
+            Log::d('ano', $ano_root_fid, $ano_depth);
             $ano_parent_fid = ($ano_depth<1) ? (explode('.',$ano_root_fid))[0]."." : $ano_root_fid;
 
             # db update
@@ -216,12 +221,13 @@ trait FidTrait
                 $this_fid = $cur_fid[$this->getFidColumnName()];
                 $cur_depth = $this->getDepthCount($this_fid);
                 $cur_update_fid = ($ano_depth ==$cur_depth) ? $ano_parent_fid: sprintf("%s%s",$ano_parent_fid,substr($this_fid,($cur_depth-$ano_depth)*-2));
-                // Log::d('cur -> ano', $this_fid,'->',$cur_update_fid);
+                Log::d('cur -> ano', $this_fid,'->',$cur_update_fid);
                 $result[] = sprintf("cur => ano : %s -> %s", $this_fid,$cur_update_fid);
                 try{
+                    $where = sprintf("%s='%s'",$using_where_key,$cur_fid[$using_where_key]);
                     $this->db->beginTransaction();
                     $this->db[$this->getFidColumnName()] = $cur_update_fid;
-                    $this->db->table($this->getTable())->where("`{$using_where_key}`",$cur_fid[$using_where_key])->update();
+                    $this->db->table($this->getTable())->where($where)->update();
                     $this->db->commit();
                 }catch(\Exception $e){
                     $this->db->rollBack();
@@ -232,7 +238,7 @@ trait FidTrait
             # change ano -> cur
             $cur_root_fid = $cur_fids[0][$this->getFidColumnName()];
             $cur_depth = $this->getDepthCount($cur_root_fid);
-            // Log::d('cur', $cur_root_fid, $cur_depth);
+            Log::d('cur', $cur_root_fid, $cur_depth);
             $cur_parent_fid = ($cur_depth<1) ? (explode('.',$cur_root_fid))[0]."." : $cur_root_fid;
 
             # db update
@@ -241,12 +247,12 @@ trait FidTrait
                 $this_fid = $ano_fid[$this->getFidColumnName()];
                 $ano_depth = $this->getDepthCount($this_fid);
                 $ano_update_fid = ($cur_depth ==$ano_depth) ? $cur_parent_fid: sprintf("%s%s",$cur_parent_fid,substr($this_fid,($ano_depth-$cur_depth)*-2));
-                // Log::d('ano -> cur', $this_fid,'->',$ano_update_fid);
+                Log::d('ano -> cur', $this_fid,'->',$ano_update_fid);
                 $result[] = sprintf("ano => cur : %s -> %s", $this_fid,$ano_update_fid);
                 try{
                     $this->db->beginTransaction();
                     $this->db[$this->getFidColumnName()] = $ano_update_fid;
-                    $this->db->table($this->getTable())->where("`{$using_where_key}`",$ano_fid[$using_where_key])->update();
+                    $this->db->table($this->getTable())->where(sprintf("%s='%s'",$using_where_key,$ano_fid[$using_where_key]))->update();
                     $this->db->commit();
                 }catch(\Exception $e){
                     $this->db->rollBack();

@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.4]
+### - 2025-06-05
+- FidTrait 클래스 업데이트
+
 ### - 2025-06-03
 - TaskDfToJsonAdapter new add
 - TaskFlow 용 RouteLoader.php new add, json, database, [t1,v1]등 버전 라우터 주소 기능

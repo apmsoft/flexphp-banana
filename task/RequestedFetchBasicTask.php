@@ -1,7 +1,6 @@
 <?php
 namespace Flex\Banana\Task;
 
-use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Utils\Requested;
 
 class RequestedFetchBasicTask
@@ -9,7 +8,6 @@ class RequestedFetchBasicTask
     public const __version = '0.1.0';
 
     public function __construct(
-        private TaskFlow $task,
         private Requested $requested
     ){}
 

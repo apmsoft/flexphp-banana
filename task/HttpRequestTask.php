@@ -1,7 +1,6 @@
 <?php
 namespace Flex\Banana\Task;
 
-use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Http\HttpRequest;
 use Flex\Banana\Classes\Log;
 
@@ -10,7 +9,6 @@ class HttpRequestTask
     public const __version = '0.1.0';
 
     public function __construct(
-        private TaskFlow $task
     ) {}
 
     public function execute(string $method, array $set): mixed

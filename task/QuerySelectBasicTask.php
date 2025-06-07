@@ -1,7 +1,6 @@
 <?php
 namespace Flex\Banana\Task;
 
-use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Db\DbManager;
 use Flex\Banana\Traits\FidTrait;
 use Flex\Banana\Classes\Log;
@@ -13,7 +12,6 @@ class QuerySelectBasicTask
     use FidTrait;
 
     public function __construct(
-        private TaskFlow $task,
         private DbManager $db,
         private string $table,
         private array $enums

@@ -1,7 +1,6 @@
 <?php
 namespace Flex\Banana\Task;
 
-use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Utils\Requested;
 use Flex\Banana\Classes\Db\DbManager;
 
@@ -10,7 +9,6 @@ class QueryUpdateBasicTask
     public const __version = '0.3.0';
 
     public function __construct(
-        private TaskFlow $task,
         private DbManager $db,
         private string $table,
         private array $enums

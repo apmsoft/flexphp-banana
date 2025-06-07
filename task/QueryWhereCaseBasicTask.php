@@ -1,7 +1,6 @@
 <?php
 namespace Flex\Banana\Task;
 
-use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Db\WhereHelper;
 use Flex\Banana\Classes\Log;
 
@@ -12,7 +11,6 @@ class QueryWhereCaseBasicTask
     private mixed $where = '';
 
     public function __construct(
-        private TaskFlow $task,
         private WhereHelper $dbWhere
     ){}
 

@@ -1,7 +1,6 @@
 <?php
 namespace Flex\Banana\Task;
 
-use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Paging\Relation;
 use Flex\Banana\Classes\Log;
 
@@ -10,7 +9,6 @@ class PagingRelationBasicTask
     public const __version = '0.2.2';
 
     public function __construct(
-        private TaskFlow $task,
         private int $total_record,
         private int $page
     ){}

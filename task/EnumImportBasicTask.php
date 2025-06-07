@@ -1,18 +1,15 @@
 <?php
 namespace Flex\Banana\Task;
 
-use Flex\Banana\Classes\TaskFlow;
 use Flex\Banana\Classes\Log;
 
 class EnumImportBasicTask
 {
     public const __version = '0.2.0';
-    private TaskFlow $task;
     private array $enumClassNames;
 
-    public function __construct(TaskFlow $task, array $enumClassNames)
+    public function __construct(array $enumClassNames)
     {
-        $this->task = $task;
         $this->enumClassNames = $enumClassNames;
     }
 

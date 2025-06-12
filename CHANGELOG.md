@@ -2,7 +2,7 @@
 ## Banana[3.5.5]
 ### - 2025-06-12
 - TaskFlow Json Mermaid 플로우 차트 변환 아답터 추가
-- Hash 기반 분산 담당 클래스 추가 ConsistentHashing
+- Hash 기반 분산 담당 클래스 추가 ConsistentHashing Static 클래스
 
 ## Banana[3.5.4]
 ### - 2025-06-07

@@ -1,4 +1,11 @@
 # Changelog
+## Banana[3.5.6]
+### - 2025-06-12
+- ConsistentHashing Static 클래스 및 Hashing 패키지 삭제
+- Hash 기반 분산 담당 클래스 추가 ConsistentHashing , JumpHashing 클래스 추가 및 일반 클래스 변경
+- ConsistentHashing , JumpHashing :: ShardManager 클래스 추가
+- Sharding 패키지 및 클래스 라이브러리 추가
+
 ## Banana[3.5.5]
 ### - 2025-06-12
 - TaskFlow Json Mermaid 플로우 차트 변환 아답터 추가

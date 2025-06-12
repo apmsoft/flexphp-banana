@@ -2,46 +2,52 @@
 namespace Flex\Banana\Classes\Hashing;
 
 final class ConsistentHashing {
-    private static array $ring = [];
-    private static int $replicas = 3;
-    private static bool $sorted = false;
+  private static array $rings = [];       // 그룹별 해시 링
+  private static array $replicas = [];    // 그룹별 replica 수
+  private static array $sorted = [];      // 그룹별 정렬 여부
 
-    public static function setReplicas(int $replicas): void {
-        self::$replicas = $replicas;
+  public static function setReplicas(string $group, int $replicas): void {
+    self::$replicas[$group] = $replicas;
+  }
+
+  public static function addServer(string $group, string $server): void {
+    $replicas = self::$replicas[$group] ?? 3; // 기본값 3
+    for ($i = 0; $i < $replicas; $i++) {
+      $hash = self::hash($server . ':' . $i);
+      self::$rings[$group][$hash] = $server;
+    }
+    self::$sorted[$group] = false;
+  }
+
+  public static function removeServer(string $group, string $server): void {
+    $replicas = self::$replicas[$group] ?? 3;
+    for ($i = 0; $i < $replicas; $i++) {
+        $hash = self::hash($server . ':' . $i);
+        unset(self::$rings[$group][$hash]);
+    }
+    self::$sorted[$group] = false;
+  }
+
+  public static function getServer(string $group, string $key): ?string {
+    if (!isset(self::$rings[$group]) || empty(self::$rings[$group])) {
+      throw new \RuntimeException("No servers registered for group: {$group}");
     }
 
-    public static function addServer(string $server): void {
-        for ($i = 0; $i < self::$replicas; $i++) {
-            $hash = self::hash($server . ':' . $i);
-            self::$ring[$hash] = $server;
-        }
-        self::$sorted = false; // 정렬 미루기
+    if (!self::$sorted[$group]) {
+      ksort(self::$rings[$group]);
+      self::$sorted[$group] = true;
     }
 
-    public static function removeServer(string $server): void {
-        for ($i = 0; $i < self::$replicas; $i++) {
-            $hash = self::hash($server . ':' . $i);
-            unset(self::$ring[$hash]);
-        }
-        self::$sorted = false;
+    $hash = self::hash($key);
+    foreach (self::$rings[$group] as $ringHash => $server) {
+      if ($hash <= $ringHash) {
+        return $server;
+      }
     }
+    return reset(self::$rings[$group]);
+  }
 
-    public static function getServer(string $key): ?string {
-        if (!self::$sorted) {
-            ksort(self::$ring);
-            self::$sorted = true;
-        }
-
-        $hash = self::hash($key);
-        foreach (self::$ring as $ringHash => $server) {
-            if ($hash <= $ringHash) {
-                return $server;
-            }
-        }
-        return reset(self::$ring);
-    }
-
-    private static function hash(string $key): int {
-        return hexdec(substr(md5($key), 0, 8));
-    }
+  private static function hash(string $key): int {
+    return hexdec(substr(md5($key), 0, 8));
+  }
 }

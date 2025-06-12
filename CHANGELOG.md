@@ -1,4 +1,8 @@
 # Changelog
+## Banana[3.5.5]
+### - 2025-06-12
+- TaskFlow Json Mermaid 플로우 차트 변환 아답터 추가
+
 ## Banana[3.5.4]
 ### - 2025-06-07
 - Task 기본 제공 클래스에 task 인자등록 전부 삭제

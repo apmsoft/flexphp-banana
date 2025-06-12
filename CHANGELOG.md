@@ -5,6 +5,7 @@
 - Hash 기반 분산 담당 클래스 추가 ConsistentHashing , JumpHashing 클래스 추가 및 일반 클래스 변경
 - ConsistentHashing , JumpHashing :: ShardManager 클래스 추가
 - Sharding 패키지 및 클래스 라이브러리 추가
+- ConsistentHashing 서버별 가중치 기능 추가
 
 ## Banana[3.5.5]
 ### - 2025-06-12

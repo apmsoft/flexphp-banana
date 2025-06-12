@@ -7,10 +7,9 @@ final class JumpHashing implements ShardingStrategyInterface
 {
 	private array $servers = [];
 
-	public function addServer(string $group, string $server): void {
-		// group 무시 (ShardManager가 그룹 단위로 관리하므로)
+	public function addServer(string $group, string $server, int $weight = 1): void {
 		if (!in_array($server, $this->servers, true)) {
-				$this->servers[] = $server;
+			$this->servers[] = $server;
 		}
 	}
 
@@ -41,7 +40,6 @@ final class JumpHashing implements ShardingStrategyInterface
 	}
 
 	private function hash64(string $key): int {
-		// crc32는 32bit이므로, 고정값과 결합해 의사 64비트 만들기
-		return crc32($key) | 0x100000000;
+		return crc32($key) | 0x100000000; // 64비트 해시 흉내
 	}
 }

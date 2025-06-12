@@ -10,8 +10,8 @@ final class ShardManager {
     self::$strategies[$group] = $strategy;
 	}
 
-	public static function addServer(string $group, string $server): void {
-		self::strategy($group)->addServer($group, $server);
+	public static function addServer(string $group, string $server, int $weight = 1): void {
+		self::strategy($group)->addServer($group, $server, $weight);
 	}
 
 	public static function removeServer(string $group, string $server): void {

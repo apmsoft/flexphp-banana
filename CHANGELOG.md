@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.6]
+### - 2025-06-15
+- TaskJsonAdapter 무한루프 방지용 코딩 추가 (max 100회 루프)
+
 ### - 2025-06-12
 - ConsistentHashing Static 클래스 및 Hashing 패키지 삭제
 - Hash 기반 분산 담당 클래스 추가 ConsistentHashing , JumpHashing 클래스 추가 및 일반 클래스 변경

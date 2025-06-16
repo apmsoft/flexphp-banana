@@ -6,12 +6,12 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonToMermaidAdapter
 {
-  public const __version = '0.3.0';
+  public const __version = '0.3.1';
   private array $workflow;
 
-  public function __construct(array $workflow)
+  public function process(array $workflow): string
   {
-    $tasks = [];
+		$tasks = [];
     if (isset($workflow['tasks']) && is_array($workflow['tasks'])) {
         $tasks = $workflow['tasks'];
     } else {
@@ -23,10 +23,7 @@ final class TaskJsonToMermaidAdapter
     }
     
     $this->workflow = $tasks;
-  }
 
-  public function process(): string
-  { 
     $nodes = [];
     $edges = [];
     $taskCount = count($this->workflow);

@@ -1,5 +1,10 @@
 # Changelog
 ## Banana[3.5.6]
+### - 2025-06-16
+- TaskJsonAdapter Env,define 변수중 json 에서 사용하지 못하는 변수 등록 기능 추가
+- TaskJsonToMermaidAdapter 관련 업데이트
+- TaskFlow 패치
+
 ### - 2025-06-15
 - TaskJsonAdapter 무한루프 방지용 코딩 추가 (max 100회 루프)
 

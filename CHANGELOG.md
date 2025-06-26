@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.6]
+### - 2025-06-26
+- EditjsFilterMessageTrait new add javascript editjs 텍스트 내용만 찾아 특수문자 제거한 한줄 문장으로 만들기, getText, getTextCut 지원
+
 ### - 2025-06-16
 - TaskJsonAdapter Env,define 변수중 json 에서 사용하지 못하는 변수 등록 기능 추가
 - TaskJsonToMermaidAdapter 관련 업데이트

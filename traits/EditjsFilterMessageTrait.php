@@ -9,6 +9,7 @@ trait EditjsFilterMessageTrait
 {
 	const TEXT_LIKE_TYPES = ["paragraph", "header", "quote", "image", "list", "code"];
 	const MEDIA_LIKE_TYPES = ['embed', 'linkTool', 'attaches', 'table'];
+	const MEDIA_TYPES_TEXT = ['embed' => "미디어", 'linkTool' => "웹 링크", 'attaches'=>"파일 첨부", 'table' => "표"];
 
 	/**
 	 * Undocumented function
@@ -28,9 +29,9 @@ trait EditjsFilterMessageTrait
 
 				# 미디어 타입
 				if(in_array($content['type'], self::MEDIA_LIKE_TYPES)){
-					$tempText = strtoupper($content['type']);
+					$tempText = strtoupper(self::MEDIA_TYPES_TEXT[$content['type']] ?? "");
 				}
-				
+
 				# 텍스트 타입
 				else if(in_array($content['type'], self::TEXT_LIKE_TYPES))
 				{

@@ -8,6 +8,7 @@ use Flex\Banana\Classes\Text\TextUtil;
 trait EditjsFilterMessageTrait
 {
 	const TEXT_LIKE_TYPES = ["paragraph", "header", "quote", "image", "list", "code"];
+	const MEDIA_LIKE_TYPES = ['embed', 'linkTool', 'attaches', 'table'];
 
 	/**
 	 * Undocumented function
@@ -23,9 +24,16 @@ trait EditjsFilterMessageTrait
 		if(is_array($descriptions) && isset($descriptions['blocks'])){
 			foreach($descriptions['blocks'] as $idx => $content)
 			{
-				if(in_array($content['type'], self::TEXT_LIKE_TYPES))
+				$tempText = "";
+
+				# 미디어 타입
+				if(in_array($content['type'], self::MEDIA_LIKE_TYPES)){
+					$tempText = strtoupper($content['type']);
+				}
+				
+				# 텍스트 타입
+				else if(in_array($content['type'], self::TEXT_LIKE_TYPES))
 				{
-					$tempText = "";
 					if($content['type'] === "image") {
 						$tempText = $content['data']['caption'] ?? "Image";
 					}else if($content['type'] === "list") {
@@ -37,14 +45,16 @@ trait EditjsFilterMessageTrait
 					}else {
 						$tempText = $content['data']['text'] ?? "";
 					}
+				}else{
+					continue;
+				}
 
-					if(trim($tempText)){
-						$xssChars = new XssChars( $tempText );
-						foreach($allowTags as $tag) {
-							$xssChars->setAllowTags($tag);
-						}
-						$text .= $xssChars->cleanTags()." ";
+				if(trim($tempText)){
+					$xssChars = new XssChars( $tempText );
+					foreach($allowTags as $tag) {
+						$xssChars->setAllowTags($tag);
 					}
+					$text .= $xssChars->cleanTags()." ";
 				}
 			}
 		}

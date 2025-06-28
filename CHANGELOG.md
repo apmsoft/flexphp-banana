@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.6]
+### - 2025-06-28
+- TaskJsonAdapter 클래스 디버그 스텝 로그 출력 강화 v0.8.1 업데이트
+
 ### - 2025-06-26
 - EditjsFilterMessageTrait new add javascript editjs 텍스트 내용만 찾아 특수문자 제거한 한줄 문장으로 만들기, getText, getTextCut 지원
 - EditjsFilterMessageTrait MEDIA 타입 체크 및 type 메세지로 추가

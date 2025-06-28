@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 
 final class TaskJsonAdapter
 {
-  public const __version = '0.8.0';
+  public const __version = '0.8.1';
   private array $workflow;
   private array $bannedEnvVars = [];
   private array $bannedConstants = [];
@@ -35,8 +35,6 @@ final class TaskJsonAdapter
 
   public function process(TaskFlow $flow): TaskFlow
   {
-    Log::d("====> JsonAdapter: 워크플로우 처리 시작.");
-
     $index = 0;
     $count = count($this->workflow);
 
@@ -54,7 +52,9 @@ final class TaskJsonAdapter
     while ($index < $count)
     {
       $step = $this->workflow[$index];
-      Log::d("JsonAdapter: 스텝 실행 중 - " . json_encode($step));
+			Log::d("");
+      Log::d("=== STEP {$index} ". str_repeat("=", ($index+1)),  $step["title"] ?? $step["type"], "===");
+			Log::d(json_encode($step));
 
       // 무한루프 처리
       if (++$stepCounter > self::MAX_EXECUTION_STEPS) {
@@ -87,14 +87,19 @@ final class TaskJsonAdapter
           continue;
         }
       } catch (\Throwable $e) {
-        Log::e("JsonAdapter: 스텝 처리 중 예외 발생 - ", $e->getMessage());
+				Log::e("********** ERROR ***********");
+				Log::e("[ JsonAdapter: 스텝 처리 중 예외 발생 ] ");
+				Log::e($e->getMessage());
+				Log::e("****************************");
         throw new \Exception($e->getMessage());
       }
 
     $index++;
     }
 
-    Log::d("<---- JsonAdapter: 워크플로우 처리 완료".PHP_EOL);
+    Log::d("^^^^^^ JsonAdapter: 워크플로우", $index."건", "처리 완료 ^^^^^^^");
+		Log::d("");
+
     return $flow;
   }
 
@@ -121,14 +126,16 @@ final class TaskJsonAdapter
     } else {
       $target = $flow->$objectName ?? null;
     }
-    Log::d("handleMethodStep: {$objectName}->{$method} 호출 중, 파라미터: " . json_encode($params));
+    Log::d("{$objectName}->{$method} 호출 중, 파라미터: " . json_encode($params));
 
     if (!is_object($target) || (!is_callable([$target, $method]) && !method_exists($target, '__call'))) {
       throw new \Exception("Method {$method} not callable on object {$objectName}");
     }
 
     $result = call_user_func_array([$target, $method], $params);
-    Log::d("handleMethodStep: 결과: " . json_encode($result));
+		Log::d("===[".$step["title"]. "결과 ===");
+		Log::d(json_encode($result));
+		Log::d("");
 
     foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
       $flow->$ctxKey = $resultKey === 'self' ? $target : ($resultKey === '@return' ? $result : null);
@@ -158,7 +165,7 @@ final class TaskJsonAdapter
         if (method_exists($enumInstance, $method)) {
           $params = array_map($resolve, $step['params'] ?? []);
           $result = call_user_func_array([$enumInstance, $method], $params);
-          Log::d("handleFunctionStep (enum): {$cls}::{$case}->{$method} 호출 결과: " . json_encode($result));
+          Log::d("(enum): {$cls}::{$case}->{$method} 호출 결과: " . json_encode($result));
           foreach (($step['outputs'] ?? []) as $ctxKey => $resultKey) {
               $flow->$ctxKey = $resultKey === '@return' ? $result : null;
           }
@@ -174,7 +181,7 @@ final class TaskJsonAdapter
     }
 
     $params = array_map($resolve, $step['params'] ?? []);
-    Log::d("handleFunctionStep: 함수 {$function} 호출 중, 파라미터: " . json_encode($params));
+    Log::d("함수 {$function} 호출 중, 파라미터: " . json_encode($params));
 
     // 변수 참조해야 하는 함수들  지원 (확장됨)
     if (in_array($function, ['array_push', 'array_unshift', 'array_shift', 'array_pop', 'sort', 'rsort', 'asort', 'ksort', 'usort', 'array_reverse'], true)) {
@@ -202,7 +209,9 @@ final class TaskJsonAdapter
     } else {
       $result = call_user_func_array($function, $params);
     }
-    Log::d("handleFunctionStep: 결과: " . json_encode($result));
+    Log::d("===[".$step["title"]. "결과 ===");
+		Log::d(json_encode($result));
+		Log::d("");
 
     // '속성'이 설정된 경우 결과 오브젝트에서 속성 추출 지원
     if (!empty($step['property']) && is_object($result) && property_exists($result, $step['property'])) {
@@ -253,7 +262,7 @@ final class TaskJsonAdapter
             $constructArgs = array_map($resolve, $step['inputs']['construct']);
             unset($step['inputs']['construct']);
           }
-          Log::d("handleClassStep: {$class} 인스턴스 생성 중, 생성자 인자: " . json_encode($constructArgs));
+          Log::d("{$class} 인스턴스 생성 중, 생성자 인자: " . json_encode($constructArgs));
 
           $instance = new $class(...$constructArgs);
           $params = array_map($resolve, $step['params'] ?? []);
@@ -264,7 +273,7 @@ final class TaskJsonAdapter
               }
             }
           }
-          Log::d("handleClassStep: {$class}->{$method} 호출 중, 파라미터: " . json_encode($params));
+          Log::d("{$class}->{$method} 호출 중, 파라미터: " . json_encode($params));
 
           $result = call_user_func_array([$instance, $method], $params);
           if (!empty($step['property'])) {
@@ -276,7 +285,10 @@ final class TaskJsonAdapter
               $result = $instance->{$step['property']};
             }
           }
-          Log::d("handleClassStep: 결과: " . json_encode($result));
+
+					Log::d("===[".$step["title"]. "결과 ===");
+					Log::d(json_encode($result));
+					Log::d("");
 
           // @return 해상도에 사용되는 경우 컨텍스트로 해결 된 결과를 주입.
           foreach ($step['outputs'] ?? [] as $ctxKey => $resultKey) {
@@ -305,7 +317,10 @@ final class TaskJsonAdapter
         }
       });
     } catch (\Throwable $e) {
-        Log::e("handleClassStep 오류: " . $e->getMessage());
+				Log::e("********** ERROR ***********");
+				Log::e("[ JsonAdapter: 스텝 처리 중 예외 발생 ] ");
+				Log::e($e->getMessage());
+				Log::e("****************************");
         throw new \Exception($e->getMessage());
     }
   }
@@ -357,7 +372,7 @@ final class TaskJsonAdapter
         return $base;
       }
 
-      // @enums::EnumName()
+      // @preset::EnumName()
       if (preg_match('/^([^:]+)::([^(]+)\(\)$/', $ref, $matches)) {
         [$_, $ctxKey, $enumKey] = $matches;
         $ctx = $flow->$ctxKey ?? null;
@@ -366,7 +381,7 @@ final class TaskJsonAdapter
         }
       }
 
-      // @enums::EnumName || @object::property
+      // @preset::EnumName || @object::property
       $parts = explode('::', $ref, 2);
       if (count($parts) === 2) {
           [$ctxKey, $enumKey] = $parts;
@@ -387,16 +402,16 @@ final class TaskJsonAdapter
       $parts = explode('.', $ref);
       $ctx = $flow->{$parts[0]} ?? null;
       if ($ctx === null) {
-          Log::w("resolveContextReference:", $value, "→ null (not found)");
+          Log::w("WARNING:", $value, "→ NULL (NOT FOUND)");
       }
       foreach (array_slice($parts, 1) as $key) {
         if ($ctx === null) {
-            Log::w("resolveContextReference:", $value, "→ null (not found)");
+            Log::w("WARNING:", $value, "→ NULL (NOT FOUND)");
             break;
         }
         $ctx = is_array($ctx) && isset($ctx[$key]) ? $ctx[$key] : null;
         if ($ctx === null) {
-            Log::w("resolveContextReference:", $value, "→ null (not found)");
+            Log::w("WARNING:", $value, "→ NULL (NOT FOUND)");
         }
       }
       return $ctx;
@@ -412,7 +427,7 @@ final class TaskJsonAdapter
         }
 
         if (!enum_exists($enumClass)) {
-            Log::w("resolveContextReference:", $ref, "→ enum class not found");
+            Log::w(":", $ref, "→ enum class not found");
             return null;
         }
 
@@ -466,6 +481,9 @@ final class TaskJsonAdapter
       $nextIndex = $idMap[$nextId];
       return $nextIndex;
     } else {
+			Log::e("********** Go STEP ERROR ***********");
+			Log::e("Go step id '{$nextId}' not found");
+			Log::e("****************************");
       throw new \Exception("Go step id '{$nextId}' not found");
     }
   }

@@ -49,8 +49,8 @@ class FileSize
 	public function __call(string $method, array $params = []) : mixed {
 		$result = '';
 		if(!method_exists($this, $method)){
-            return throw new Exception( 'e_not_found_method');
-        }
+			throw new Exception( 'e_not_found_method');
+		}
 
 		$result = match($method){
 			'bytes'  => $this->bytes(),

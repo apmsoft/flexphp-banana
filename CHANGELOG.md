@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.6]
+### - 2025-07-03
+- App clientIP 키 강화
+
 ### - 2025-06-28
 - TaskJsonAdapter 클래스 디버그 스텝 로그 출력 강화 v0.8.1 업데이트
 

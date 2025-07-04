@@ -33,12 +33,18 @@ class QueryDeleteBasicTask
         if($_where)
         {
             try{
-                $data = $this->db->table($this->table)->where($_where)->query()->fetch_assoc();
-                if($data){
-                    $this->db->beginTransaction();
-                    $this->db->table($this->table)->where($_where)->delete();
-                    $this->db->commit();
-                }
+						if ($this->db->inTransaction()) {
+							$this->db->rollBack();
+						}
+						$data = $this->db->table($this->table)->where($_where)->query()->fetch_assoc();
+						if($data){
+								if ($this->db->inTransaction()) {
+                                    $this->db->rollBack();
+                                }
+								$this->db->beginTransaction();
+								$this->db->table($this->table)->where($_where)->delete();
+								$this->db->commit();
+						}
             }catch(\Exception $e){
                 Log::e($e->getMessage());
                 // throw new \Exception($e->getMessage());

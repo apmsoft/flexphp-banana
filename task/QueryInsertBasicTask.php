@@ -14,7 +14,7 @@ class QueryInsertBasicTask
     public function __construct(
         private DbManager $db,
         private string $table,
-        private array $enums
+        private array $preset
     ) {}
 
     #@ Fid
@@ -32,9 +32,12 @@ class QueryInsertBasicTask
     public function execute(array $requested): void
     {
         try {
-            $this->db->beginTransaction();
+				if ($this->db->inTransaction()) {
+					$this->db->rollBack();
+        }
+        $this->db->beginTransaction();
 
-            foreach ($this->enums as $item) {
+            foreach ($this->preset as $item) {
                 if (!is_array($item) || count($item) === 0) {
                     continue;
                 }

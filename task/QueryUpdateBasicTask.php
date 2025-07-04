@@ -11,7 +11,7 @@ class QueryUpdateBasicTask
     public function __construct(
         private DbManager $db,
         private string $table,
-        private array $enums
+        private array $preset
     ){}
 
     private function _where(string | array $where) : void {
@@ -29,30 +29,33 @@ class QueryUpdateBasicTask
     public function execute(string | array $where, array $requested) : void
     {
         try {
-            $this->db->beginTransaction();
-            foreach ($this->enums as $item)
-            {
-                if (!is_array($item) || count($item) === 0) {
-                    continue;
-                }
+					if ($this->db->inTransaction()) {
+						$this->db->rollBack();
+					}
+					$this->db->beginTransaction();
+					foreach ($this->preset as $item)
+					{
+							if (!is_array($item) || count($item) === 0) {
+									continue;
+							}
 
-                $enum = $item[0];
-                $options = array_slice($item, 1);
+							$enum = $item[0];
+							$options = array_slice($item, 1);
 
-                // 필요한 경우 클래스 문자열을 ENUM 인스턴스로 변환
-                if (is_string($enum) && enum_exists($enum)) {
-                    $enum = $enum::cases()[0];
-                }
+							// 필요한 경우 클래스 문자열을 ENUM 인스턴스로 변환
+							if (is_string($enum) && enum_exists($enum)) {
+									$enum = $enum::cases()[0];
+							}
 
-                if (!($enum instanceof \BackedEnum)) {
-                    continue;
-                }
+							if (!($enum instanceof \BackedEnum)) {
+									continue;
+							}
 
-                $columnName = $enum->value;
-                $this->db[$columnName] = $enum->filter($requested[$columnName] ?? '', ...$options);
-            }
-            $this->db->table($this->table)->where($this->_where($where))->update();
-            $this->db->commit();
+							$columnName = $enum->value;
+							$this->db[$columnName] = $enum->filter($requested[$columnName] ?? '', ...$options);
+					}
+					$this->db->table($this->table)->where($this->_where($where))->update();
+					$this->db->commit();
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }

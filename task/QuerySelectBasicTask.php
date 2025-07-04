@@ -14,7 +14,7 @@ class QuerySelectBasicTask
     public function __construct(
         private DbManager $db,
         private string $table,
-        private array $enums
+        private array $preset
     ){
         # query start
         $this->db->table($this->table)->select(
@@ -36,7 +36,7 @@ class QuerySelectBasicTask
     private function findSelectColumns(): string
     {
         $columns = [];
-        foreach ($this->enums as $item)
+        foreach ($this->preset as $item)
         {
             if (!is_array($item) || count($item) === 0) {
                 continue;
@@ -123,34 +123,34 @@ class QuerySelectBasicTask
             $data = [];
             while ($row = $result->fetch_assoc())
             {
-                $formattedRow = [];
-                foreach ($this->enums as $item)
-                {
-                    if (!is_array($item) || count($item) === 0) {
-                        continue;
-                    }
+							$formattedRow = [];
+							foreach ($this->preset as $item)
+							{
+								if (!is_array($item) || count($item) === 0) {
+										continue;
+								}
 
-                    $enum = $item[0];
-                    $options = array_slice($item, 1);
+								$enum = $item[0];
+								$options = array_slice($item, 1);
 
-                    // 필요한 경우 클래스 문자열을 ENUM 인스턴스로 변환
-                    if (is_string($enum) && enum_exists($enum)) {
-                        $enum = $enum::cases()[0];
-                    }
+								// 필요한 경우 클래스 문자열을 ENUM 인스턴스로 변환
+								if (is_string($enum) && enum_exists($enum)) {
+										$enum = $enum::cases()[0];
+								}
 
-                    if (!($enum instanceof \BackedEnum)) {
-                        continue;
-                    }
+								if (!($enum instanceof \BackedEnum)) {
+										continue;
+								}
 
-                    $columnName = $enum->value;
-                    if ($columnName == $this->getFidColumnName()) {
-                        $formattedRow[$columnName] = $enum->format($row[$columnName] ?? '', ...$options);
-                        $formattedRow["depth"]     = $this->getDepthCount($row[$columnName]);
-                    }else{
-                        $formattedRow[$columnName] = $enum->format($row[$columnName] ?? '', ...$options);
-                    }
-                }
-                $data[] = $formattedRow;
+								$columnName = $enum->value;
+								if ($columnName == $this->getFidColumnName()) {
+										$formattedRow[$columnName] = $enum->format($row[$columnName] ?? '', ...$options);
+										$formattedRow["depth"]     = $this->getDepthCount($row[$columnName]);
+								}else{
+										$formattedRow[$columnName] = $enum->format($row[$columnName] ?? '', ...$options);
+								}
+							}
+							$data[] = $formattedRow;
             }
 
             return $data;

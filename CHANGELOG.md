@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.7]
+### - 2025-07-11
+- TimeZoneTrait dataInTZ method new add
+
 ### - 2025-07-08
 - TextUtil v1.1->1.2 각 파트별 성능 개선 (mbstring 필수 )
 

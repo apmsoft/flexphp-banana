@@ -81,11 +81,6 @@ class HttpRequest {
         foreach ($this->urls as $idx => $requestInfo) 
         {
             $ch[$idx] = curl_init($requestInfo['url']);
-
-            // 1. 보안 강화: SSL 검증 옵션 제거 (기본값 사용)
-            // 테스트 환경에서 자체 서명 인증서 사용 시 curl_setopt($ch[$idx], CURLOPT_CAINFO, '경로/ca.crt'); 사용 권장
-            // curl_setopt($ch[$idx], CURLOPT_SSL_VERIFYHOST, false); // 제거
-            // curl_setopt($ch[$idx], CURLOPT_SSL_VERIFYPEER, false); // 제거
             
             curl_setopt($ch[$idx], CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch[$idx], CURLOPT_CUSTOMREQUEST, $method);
@@ -94,8 +89,6 @@ class HttpRequest {
             $params = $requestInfo['params'] ?? [];
 
             $contentType = $this->getContentType($headers);
-
-            // 2. 편의성 개선: Content-Type 자동 감지 및 설정
             if (!$contentType && $method !== 'GET') {
                 if (is_string($params) && (strpos($params, '{') === 0 || strpos($params, '[') === 0)) {
                     $contentType = 'application/json';
@@ -106,7 +99,6 @@ class HttpRequest {
             }
 
             if ($method !== 'GET') {
-                // 3. 편의성 개선: 파라미터 자동 인코딩
                 $postFields = $this->preparePostFields($params, $contentType);
                 curl_setopt($ch[$idx], CURLOPT_POSTFIELDS, $postFields);
             } else if (!empty($params)) {
@@ -129,7 +121,7 @@ class HttpRequest {
             $body = curl_multi_getcontent($ch[$index]);
             $contentTypeHeader = curl_getinfo($ch[$index], CURLINFO_CONTENT_TYPE);
             
-            // 4. 버그 수정: 각 요청에 맞는 정확한 정보로 로그 기록
+            // 각 요청에 맞는 정확한 정보로 로그 기록
             $currentRequest = $this->urls[$index];
             Log::d("[DEBUG CURL]", [
                 "httpCode" => $httpCode,
@@ -155,7 +147,7 @@ class HttpRequest {
                     if (json_last_error() === JSON_ERROR_NONE) {
                         $decodedBody = $tempDecoded;
                     } else {
-                        // 5. 버그 수정: Fatal Error 방지
+                        // Fatal Error 방지
                         Log::e($index, 'JSON decode error', json_last_error_msg());
                     }
                 }

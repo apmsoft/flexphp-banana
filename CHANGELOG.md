@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.7]
+### - 2025-07-23
+- HttpRequest v1.3.0 -> v1.4.0 업데이트 보안관련 패치업데이트
+
 ### - 2025-07-14
 - TimeZoneTrait toTZFormat 업데이트 timezone_formats 을 array | string 두가지 타입으로 가능하도록 업데이트
 

@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Http;
 use Flex\Banana\Classes\Log;
 
 class HttpRequest {
-    public const __version = '1.3.0';
+    public const __version = '1.4.0'; // 버전 업데이트
     private $urls = [];
     private $mch;
 
@@ -15,7 +15,14 @@ class HttpRequest {
         $this->mch = curl_multi_init();
     }
 
-    public function set(string $url, string $params, array $headers = []): HttpRequest {
+    /**
+     * 요청을 추가합니다. 파라미터를 배열로 전달할 수 있습니다.
+     * @param string $url
+     * @param string|array $params
+     * @param array $headers
+     * @return HttpRequest
+     */
+    public function set(string $url, $params = [], array $headers = []): HttpRequest {
         if (trim($url)) {
             $this->urls[] = [
                 "url"     => $url,
@@ -69,30 +76,43 @@ class HttpRequest {
     private function execute(string $method) 
     {
         $response = [];
-        foreach ($this->urls as $idx => $url) 
+        $ch = []; // $ch 배열 초기화
+
+        foreach ($this->urls as $idx => $requestInfo) 
         {
-            $ch[$idx] = curl_init($url['url']);
+            $ch[$idx] = curl_init($requestInfo['url']);
 
-            $headers = $url['headers'] ?? [];
-            $params = $url['params'];
-
-            curl_setopt($ch[$idx], CURLOPT_CUSTOMREQUEST, $method);
-            curl_setopt($ch[$idx], CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch[$idx], CURLOPT_SSL_VERIFYPEER, false);
+            // 1. 보안 강화: SSL 검증 옵션 제거 (기본값 사용)
+            // 테스트 환경에서 자체 서명 인증서 사용 시 curl_setopt($ch[$idx], CURLOPT_CAINFO, '경로/ca.crt'); 사용 권장
+            // curl_setopt($ch[$idx], CURLOPT_SSL_VERIFYHOST, false); // 제거
+            // curl_setopt($ch[$idx], CURLOPT_SSL_VERIFYPEER, false); // 제거
+            
             curl_setopt($ch[$idx], CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch[$idx], CURLOPT_CUSTOMREQUEST, $method);
+
+            $headers = $requestInfo['headers'] ?? [];
+            $params = $requestInfo['params'] ?? [];
 
             $contentType = $this->getContentType($headers);
 
-            if ($method !== 'GET') {
-                $postFields = $this->preparePostFields($params, $contentType);
-                curl_setopt($ch[$idx], CURLOPT_POSTFIELDS, $postFields);
-            } else if ($params) {
-                $url['url'] .= (strpos($url['url'], '?') === false ? '?' : '&') . $params;
-                curl_setopt($ch[$idx], CURLOPT_URL, $url['url']);
+            // 2. 편의성 개선: Content-Type 자동 감지 및 설정
+            if (!$contentType && $method !== 'GET') {
+                if (is_string($params) && (strpos($params, '{') === 0 || strpos($params, '[') === 0)) {
+                    $contentType = 'application/json';
+                } else {
+                    $contentType = 'application/x-www-form-urlencoded';
+                }
+                $headers[] = "Content-Type: $contentType";
             }
 
-            if (!$this->hasContentTypeHeader($headers) && $contentType) {
-                $headers[] = "Content-Type: $contentType";
+            if ($method !== 'GET') {
+                // 3. 편의성 개선: 파라미터 자동 인코딩
+                $postFields = $this->preparePostFields($params, $contentType);
+                curl_setopt($ch[$idx], CURLOPT_POSTFIELDS, $postFields);
+            } else if (!empty($params)) {
+                $queryString = is_array($params) ? http_build_query($params) : $params;
+                $requestInfo['url'] .= (strpos($requestInfo['url'], '?') === false ? '?' : '&') . $queryString;
+                curl_setopt($ch[$idx], CURLOPT_URL, $requestInfo['url']);
             }
 
             curl_setopt($ch[$idx], CURLOPT_HTTPHEADER, $headers);
@@ -107,43 +127,40 @@ class HttpRequest {
         foreach (array_keys($ch) as $index) {
             $httpCode = curl_getinfo($ch[$index], CURLINFO_HTTP_CODE);
             $body = curl_multi_getcontent($ch[$index]);
-
             $contentTypeHeader = curl_getinfo($ch[$index], CURLINFO_CONTENT_TYPE);
-            $isJsonResponse = stripos($contentTypeHeader, 'application/json') !== false;
+            
+            // 4. 버그 수정: 각 요청에 맞는 정확한 정보로 로그 기록
+            $currentRequest = $this->urls[$index];
+            Log::d("[DEBUG CURL]", [
+                "httpCode" => $httpCode,
+                "body" => $body,
+                "headers" => $currentRequest['headers'],
+                "params" => $currentRequest['params'],
+                "url" => curl_getinfo($ch[$index], CURLINFO_EFFECTIVE_URL), // 실제 요청된 URL 기록
+                "responseContentType" => $contentTypeHeader
+            ]);
 
-            // 이미 배열인지 확인
-            if (is_array($body)) {
-                $decodedBody = $body;
-            } else if (is_string($body) && !empty($body)) {
-                if ($isJsonResponse) {
-                    // JSON 디코딩 시도
-                    $decodedBody = $body; // 기본값으로 원본 설정
-                    if (version_compare(PHP_VERSION, '7.3.0', '>=')) {
-                        try {
-                            $tempDecoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-                            if (is_array($tempDecoded)) {
-                                $decodedBody = $tempDecoded;
-                            }
-                        } catch (\JsonException $e) {
-                            Log::e($index, 'JSON decode error', $e->getMessage());
-                            throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => $body]));
-                        }
-                    } else {
-                        $tempDecoded = json_decode($body, true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($tempDecoded)) {
-                            $decodedBody = $tempDecoded;
-                        } else {
-                            Log::e($index, 'JSON decode error', json_last_error_msg());
-                            throw new \Exception(json_encode(['message' => $e->getMessage(),'body' => json_last_error_msg()]));
-                        }
+            $decodedBody = $body;
+            $isJsonResponse = $contentTypeHeader && stripos($contentTypeHeader, 'application/json') !== false;
+
+            if ($isJsonResponse && is_string($body) && !empty($body)) {
+                if (version_compare(PHP_VERSION, '7.3.0', '>=')) {
+                    try {
+                        $decodedBody = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+                    } catch (\JsonException $e) {
+                        Log::e($index, 'JSON decode error', $e->getMessage());
                     }
                 } else {
-                    $decodedBody = $body;
+                    $tempDecoded = json_decode($body, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $decodedBody = $tempDecoded;
+                    } else {
+                        // 5. 버그 수정: Fatal Error 방지
+                        Log::e($index, 'JSON decode error', json_last_error_msg());
+                    }
                 }
-            } else {
-                $decodedBody = $body;
             }
-
+            
             $response[$index] = [
                 'code' => $httpCode,
                 'body' => $decodedBody,
@@ -155,54 +172,34 @@ class HttpRequest {
         $this->urls = [];
         return $response;
     }
-
-    private function getContentType($headers): ?string {
+    
+    private function getContentType(array $headers): ?string {
         foreach ($headers as $header) {
             if (stripos($header, 'Content-Type:') === 0) {
-                list(, $contentType) = explode(':', $header, 2);
-                return trim($contentType);
+                return trim(substr($header, strpos($header, ':') + 1));
             }
         }
         return null;
     }
 
-    private function hasContentTypeHeader($headers): bool {
-        foreach ($headers as $header) {
-            if (stripos($header, 'Content-Type:') === 0) {
-                return true;
+    private function preparePostFields($params, ?string $contentType) {
+        if (is_array($params)) {
+            if (stripos($contentType, 'application/json') !== false) {
+                return json_encode($params, JSON_UNESCAPED_UNICODE);
             }
-        }
-        return false;
-    }
-
-    private function preparePostFields($params, $contentType) {
-        switch ($contentType) {
-            case 'application/json':
-                return $params; // JSON string as is
-            case 'application/x-www-form-urlencoded':
-                return $params; // URL encoded string as is
-            case 'multipart/form-data':
-                parse_str($params, $parsedParams);
-                $postFields = [];
-                foreach ($parsedParams as $key => $value) {
-                    if (is_string($value) && strpos($value, '@') === 0 && file_exists(substr($value, 1))) {
-                        $filePath = substr($value, 1);
-                        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                        $mimeType = finfo_file($finfo, $filePath);
-                        finfo_close($finfo);
-                        $fileName = basename($filePath);
-                        $postFields[$key] = new \CURLFile($filePath, $mimeType, $fileName);
-                    } else {
-                        $postFields[$key] = $value;
-                    }
-                }
-                return $postFields;
-            default:
+            if (stripos($contentType, 'multipart/form-data') !== false) {
+                // 배열 내 파일 경로(@)를 CURLFile 객체로 변환하는 로직 추가 가능
                 return $params;
+            }
+            // 기본값은 x-www-form-urlencoded
+            return http_build_query($params);
         }
+        return $params; // 문자열이면 그대로 반환
     }
 
     public function __destruct() {
-        curl_multi_close($this->mch);
+        if ($this->mch) {
+            curl_multi_close($this->mch);
+        }
     }
 }

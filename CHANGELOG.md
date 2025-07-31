@@ -1,5 +1,9 @@
 # Changelog
 ## Banana[3.5.7]
+### - 2025-07-31
+- ImageCompressorEditjsTrait 업데이트 클래스네임 오타로인한 변경
+- ImageCompressorEditjsTrait getFindBase64Images 메소드 추가 editjs내에 이미지만 목록으로 추출,isValidBase64Image 이미지인지 체크 기능 추가
+
 ### - 2025-07-23
 - HttpRequest v1.3.0 -> v1.4.0 업데이트 보안관련 패치업데이트
 

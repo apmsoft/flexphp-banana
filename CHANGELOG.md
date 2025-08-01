@@ -1,4 +1,8 @@
 # Changelog
+## Banana[3.5.8]
+### - 2025-08-01
+- 마크다운 텍스트 editorjs 로 변환 하는 클래스 추가
+
 ## Banana[3.5.7]
 ### - 2025-07-31
 - ImageCompressorEditjsTrait 업데이트 클래스네임 오타로인한 변경

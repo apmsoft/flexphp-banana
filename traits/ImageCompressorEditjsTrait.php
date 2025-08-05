@@ -13,7 +13,7 @@ trait ImageCompressorEditjsTrait
 			foreach ($descriptions['blocks'] as $idx => $content) {
 				if (
 					isset($content['type'], $content['data']['url']) &&
-					$content['type'] === 'image' &&
+					in_array($content['type'], ['image', 'simpleImage'], true) &&
 					$this->isValidBase64Image($content['data']['url'])
 				) {
 					$original = $content['data']['url'];
@@ -35,7 +35,7 @@ trait ImageCompressorEditjsTrait
 			foreach ($descriptions['blocks'] as $content) {
 				if (
 					isset($content['type'], $content['data']['url']) &&
-					$content['type'] === 'image' &&
+					in_array($content['type'], ['image', 'simpleImage'], true) &&
 					$this->isValidBase64Image($content['data']['url'])
 				) {
 					$images[] = $content['data']['url'];

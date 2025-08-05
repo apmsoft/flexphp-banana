@@ -1,5 +1,8 @@
 # Changelog
 ## Banana[3.5.8]
+### - 2025-08-05
+- ImageCompressorEditjsTrait update 이미지 simpleImage 타입도 추가
+
 ### - 2025-08-04
 - 유티 ip address checker new add
 

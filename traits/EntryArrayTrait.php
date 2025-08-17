@@ -37,12 +37,27 @@ trait EntryArrayTrait
 		return null;
 	}
 
-	public static function __callStatic(string $name, array $args = []): ?string
-	{
-			$case = !empty($args[0]) ? $args[0] : 'UPPER';
-			$entry = self::byName($name, $case);
-			return $entry ? $entry->value : null;
-	}
+	public static function __callStatic(string $name, array $args = []): mixed
+  {
+    // 기존 byName() 호출 로직
+    $entry = self::byName($name);
+    if ($entry) {
+      return $entry->value;
+    }
+
+    // 단일 enum 케이스에서만 인스턴스 메서드 호출 허용
+    if (count(self::cases()) === 1) {
+			// EnumInstanceTrait 클래스와 함께 사용해야 함
+			$enumInstance = self::cases()[0];
+			
+			// 호출하려는 메서드가 인스턴스에 존재하는지 확인
+			if (method_exists($enumInstance, $name)) {
+				return $enumInstance->$name(...$args);
+			}
+    }
+
+    return null;
+  }
 
 	// 단일 enum 케이스용 메서드
 	public static function name(): ?string

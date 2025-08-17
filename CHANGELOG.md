@@ -3,6 +3,7 @@
 ### - 2025-08-17
 - WhereCouch, WhereHelper,WhereInterface, WhereSql caseRaw 메소드 추가
 - caseRaw 필터링 없이 스트링 구문 그래도 where 문 구조에 추가 하는 기능
+- EntryArrayTrait 클래스에 단일 enum 케이스용 메서드용 name(), value() 추가 TitleEnum::TITLE() -> TitleEnum::value() 이렇게 사용 가능
 
 ## Banana[3.5.8]
 ### - 2025-08-05

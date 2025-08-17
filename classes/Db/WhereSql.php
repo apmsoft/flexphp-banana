@@ -24,7 +24,7 @@ class WhereSql implements WhereInterface
 		$this->init();
 	}
 
-	public function caseRow(string $rawWhere) : WhereSql {
+	public function caseRaw(string $rawWhere) : WhereSql {
 		$is_append = false;
 		if($rawWhere == "0") $is_append = true;
 		else if($rawWhere && $rawWhere !=''){

@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Db;
 
 interface WhereInterface {
     public function __construct(string $coord = 'AND');
-    public function caseRow(string $rawWhere): self;
+    public function caseRaw(string $rawWhere): self;
     public function case(string $field_name, string $condition, mixed $value, bool $is_qutawrap = true, bool $join_detection = true): self;
     public function begin(string $coord): self;
     public function end(): self;

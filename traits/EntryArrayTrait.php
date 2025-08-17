@@ -1,4 +1,6 @@
 <?php
+namespace Flex\Banana\Traits;
+
 trait EntryArrayTrait
 {
 	public static function names(): array

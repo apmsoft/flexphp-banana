@@ -65,8 +65,18 @@ class WhereCouch implements WhereInterface
 			return $this;
 	}
 
-	public function caseRow(string $rawWhere) : WhereCouch {
-		$this->where_group[$this->current_group][] = $rawWhere;
+	public function caseRow(string $rawWhere) : WhereSql {
+		$is_append = false;
+		if($rawWhere == "0") $is_append = true;
+		else if($rawWhere && $rawWhere !=''){
+			$is_append = true;
+		}
+
+		# where 문을 그룹별로 묶기
+		if($is_append)
+		{
+			$this->where_group[$this->current_group][] = $rawWhere;
+		}
 
 		return $this;
 	}

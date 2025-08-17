@@ -25,7 +25,17 @@ class WhereSql implements WhereInterface
 	}
 
 	public function caseRow(string $rawWhere) : WhereSql {
-		$this->where_group[$this->current_group][] = $rawWhere;
+		$is_append = false;
+		if($rawWhere == "0") $is_append = true;
+		else if($rawWhere && $rawWhere !=''){
+			$is_append = true;
+		}
+
+		# where 문을 그룹별로 묶기
+		if($is_append)
+		{
+			$this->where_group[$this->current_group][] = $rawWhere;
+		}
 
 		return $this;
 	}

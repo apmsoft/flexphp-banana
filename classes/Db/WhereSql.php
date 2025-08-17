@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Log;
 # 데이터베이스 QUERY구문에 사용되는 WHERE문 만드는데 도움을 주는 클래스
 class WhereSql implements WhereInterface
 {
-	public const __version = '2.0';
+	public const __version = '2.0.1';
 	private string $where = '';
 	private array $where_group = [];
 	private string $current_group = '';
@@ -22,6 +22,12 @@ class WhereSql implements WhereInterface
 		$this->where = '';
 		$this->coord = $coord;
 		$this->init();
+	}
+
+	public function caseRow(string $rawWhere) : WhereSql {
+		$this->where_group[$this->current_group][] = $rawWhere;
+
+		return $this;
 	}
 
 	# void

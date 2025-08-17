@@ -7,7 +7,7 @@ use Flex\Banana\Classes\Log;
 # 데이터베이스 QUERY구문에 사용되는 WHERE문 만드는데 도움을 주는 클래스
 class WhereCouch implements WhereInterface
 {
-	public const __version = '0.1.0';
+	public const __version = '0.1.1';
 	private array $where_group = [];
 	private string $current_group = '';
 	private string $current_coord = '';
@@ -45,25 +45,31 @@ class WhereCouch implements WhereInterface
 
 	# where 그룹묶기 종료
 	public function end() : WhereCouch
-    {
-		// Log::d(__METHOD__,$this->where_group);
-        // 현재 그룹에 조건이 있으면
-        if (count($this->where_group[$this->current_group])) {
-            // 조건을 배열로 저장
-            $group_conditions = ['$' . strtolower($this->current_coord) => []];
-            foreach ($this->where_group[$this->current_group] as $condition) {
-                $group_conditions['$' . strtolower($this->current_coord)][] = $condition;
-            }
-            // 조건을 and, or로 구분하여 추가
-            $this->where_groups_data[]=$group_conditions;
-        }
+	{
+	// Log::d(__METHOD__,$this->where_group);
+			// 현재 그룹에 조건이 있으면
+			if (count($this->where_group[$this->current_group])) {
+					// 조건을 배열로 저장
+					$group_conditions = ['$' . strtolower($this->current_coord) => []];
+					foreach ($this->where_group[$this->current_group] as $condition) {
+							$group_conditions['$' . strtolower($this->current_coord)][] = $condition;
+					}
+					// 조건을 and, or로 구분하여 추가
+					$this->where_groups_data[]=$group_conditions;
+			}
 
-        // 현재 그룹과 coord 초기화
-        $this->current_group = '';
-        $this->current_coord = '';
+			// 현재 그룹과 coord 초기화
+			$this->current_group = '';
+			$this->current_coord = '';
 
-        return $this;
-    }
+			return $this;
+	}
+
+	public function caseRow(string $rawWhere) : WhereCouch {
+		$this->where_group[$this->current_group][] = $rawWhere;
+
+		return $this;
+	}
 
 	# void
 	# 구문어를 만든다.
@@ -195,7 +201,6 @@ class WhereCouch implements WhereInterface
 		$this->init();
 	return $result;
 	}
-
 
 	public function __destruct(){
 		$this->current_group     = '';

@@ -41,21 +41,24 @@ trait EntryArrayTrait
 
 	public static function __callStatic(string $name, array $args = []): mixed
   {
-    // 기존 byName() 호출 로직
-    $entry = self::byName($name);
-    if ($entry) {
-      return $entry->value;
+    // 단일 enum 케이스에서만 인스턴스 메서드 호출 허용 (filter -> _filter, format -> _format)
+    $cases = self::cases();
+    if (count($cases) === 1) {
+      $instance = $cases[0];
+
+			if (str_starts_with($name, '_'))
+			{
+				$realMethodName = substr($name, 1);
+				if (method_exists($instance, $realMethodName)) {
+					return $instance->$realMethodName(...$args);
+				}
+			}
     }
 
-    // 단일 enum 케이스에서만 인스턴스 메서드 호출 허용
-    if (count(self::cases()) === 1) {
-			// EnumInstanceTrait 클래스와 함께 사용해야 함
-			$enumInstance = self::cases()[0];
-			
-			// 호출하려는 메서드가 인스턴스에 존재하는지 확인
-			if (method_exists($enumInstance, $name)) {
-				return $enumInstance->$name(...$args);
-			}
+		// TITLE() 호출 로직
+		$entry = self::byName($name);
+    if ($entry) {
+      return $entry->value;
     }
 
     return null;

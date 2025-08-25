@@ -1,4 +1,10 @@
 # Changelog
+## Banana[3.5.10]
+- DbPgSql, bulk 기능 추가 (insert, update 데이터를 한번에 저장 및 업데이트 하는 기능)
+- bulkData 용 데이터 목록
+- bulk() bulkData 에 데이터를 쌓는 역할,
+- insertBulk(), updateBulk() 기능 추가 
+
 ## Banana[3.5.9]
 ### - 2025-08-17
 - WhereCouch, WhereHelper,WhereInterface, WhereSql caseRaw 메소드 추가

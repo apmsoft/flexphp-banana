@@ -11,11 +11,12 @@ use \ArrayAccess;
 
 class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.1.3';
+	public const __version = '0.1.4';
 	private const DSN = "pgsql:host={host};port={port};dbname={dbname}";
 
     public $pdo;
     private $params = [];
+		private array $bulkData = []; // bulk 데이터를 저장할 배열
     private array $pdo_options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
@@ -86,9 +87,9 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 	}
 
 	protected function quoteIdentifier($identifier): string
-    {
-        return '"' . str_replace('"', '""', $identifier) . '"';
-    }
+	{
+		return '"' . str_replace('"', '""', $identifier) . '"';
+	}
 
 	# @ DbSqlInterface
 	public function insert() : void {
@@ -127,6 +128,56 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		}
 	}
 
+	# db[] 용을 bulk 배열에 담는 기능
+	public function bulk() : self
+	{
+		$this->bulkData[] = $this->params;
+		$this->params = [];
+		
+		return $this;
+	}
+
+	// 벌크 데이터 삽입 메소드
+	public function insertBulk() : void
+	{
+		if (empty($this->bulkData)) {
+			throw new \Exception("No data to insert in bulk.");
+		}
+
+		// 첫 번째 데이터 행을 기반으로 컬럼 이름 추출
+		$firstRow = reset($this->bulkData);
+		$fields   = array_keys($firstRow);
+
+		// SQL 쿼리 생성
+		$values = [];
+		$boundParams  = [];
+		$i = 0;
+		foreach ($this->bulkData as $row) {
+			$placeholders = [];
+			foreach ($fields as $field) {
+				$placeholder               = ":{$field}_{$i}";
+				$placeholders[]            = $placeholder;
+				$boundParams[$placeholder] = $row[$field];
+			}
+			$values[] = sprintf("(%s)", implode(', ', $placeholders));
+			$i++;
+		}
+
+		$query = sprintf(
+			"INSERT INTO %s (%s) VALUES %s",
+			$this->query_params['table'],
+			implode(', ', $fields),
+			implode(', ', $values)
+		);
+
+		try {
+			$this->bulkData = []; // 삽입 후 데이터 초기화
+			$this->query($query, $boundParams);
+		} catch (Exception $e) {
+			throw new Exception("Bulk insert failed: " . $e->getMessage());
+		}
+	}
+
 	# @ DbSqlInterface
 	public function update() : void {
 		if (empty($this->params) || empty($this->query_params['where'])) {
@@ -159,6 +210,57 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 			throw new Exception("Query failed: " . $e->getMessage());
 		}
 	}
+
+	public function updateBulk() : void
+  {
+    if (empty($this->bulkData)) {
+      throw new \Exception("No data to update in bulk.");
+    }
+
+		// WHERE 절이 없는 경우 예외 처리
+		if (empty($this->query_params['where'])) {
+			throw new \Exception("WHERE clause is missing for bulk update.");
+		}
+    
+    // 이 부분은 $this->params를 사용하지 않으므로, $this->bulkData를 직접 사용합니다.
+    $firstRow = reset($this->bulkData);
+    $fields = array_keys($firstRow);
+    
+    $values_parts = [];
+    $set_clauses = [];
+    $boundParams = [];
+    $i = 0;
+    
+    foreach ($this->bulkData as $row) {
+        $placeholders = [];
+        foreach ($fields as $field) {
+            $placeholder = ":{$field}_{$i}";
+            $placeholders[] = $placeholder;
+            $boundParams[$placeholder] = $row[$field];
+            
+            // UPDATE SET 절에 사용될 필드
+            $set_clauses[$field] = sprintf("%s = temp.%s", $this->quoteIdentifier($field), $this->quoteIdentifier($field));
+        }
+        $values_parts[] = sprintf("(%s)", implode(', ', $placeholders));
+        $i++;
+    }
+    
+    $query = sprintf(
+      "UPDATE %s AS t SET %s FROM (VALUES %s) AS temp(%s) %s",
+      $this->query_params['table'],
+      implode(', ', array_unique(array_values($set_clauses))),
+      implode(', ', $values_parts),
+      implode(', ', array_map([$this, 'quoteIdentifier'], $fields)),
+      $this->query_params['where']
+    );
+    
+    try {
+      $this->bulkData = []; // 데이터 초기화
+      $this->query($query, $boundParams);
+    } catch (\Exception $e) {
+      throw new \Exception("Bulk update failed: " . $e->getMessage());
+    }
+  }
 
 	# @ DbSqlInterface
 	public function delete() : void {

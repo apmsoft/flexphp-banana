@@ -3,7 +3,7 @@ namespace Flex\Banana\Classes\Http;
 use Flex\Banana\Classes\Log;
 
 class HttpRequest {
-    public const __version = '1.4.0'; // 버전 업데이트
+    public const __version = '1.4.1'; // 버전 업데이트
     private $urls = [];
     private $mch;
 
@@ -82,6 +82,14 @@ class HttpRequest {
         {
             $ch[$idx] = curl_init($requestInfo['url']);
             
+            curl_setopt($ch[$idx], CURLOPT_VERBOSE, false);
+            curl_setopt($ch[$idx], CURLOPT_UPLOAD, false);
+            curl_setopt($ch[$idx], CURLOPT_NOPROGRESS, true);
+
+            if (defined('CURL_HTTP_VERSION_1_1')) {
+                curl_setopt($ch[$idx], CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+            }
+
             curl_setopt($ch[$idx], CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch[$idx], CURLOPT_CUSTOMREQUEST, $method);
 
@@ -111,6 +119,7 @@ class HttpRequest {
             curl_multi_add_handle($this->mch, $ch[$idx]);
         }
 
+        $running = 0;
         do {
             curl_multi_exec($this->mch, $running);
             curl_multi_select($this->mch);
@@ -159,6 +168,7 @@ class HttpRequest {
                 'url' => curl_getinfo($ch[$index], CURLINFO_EFFECTIVE_URL)
             ];
             curl_multi_remove_handle($this->mch, $ch[$index]);
+            curl_close($ch[$index]);
         }
 
         $this->urls = [];

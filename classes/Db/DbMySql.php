@@ -22,7 +22,7 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 
 	public function __construct(
 		WhereSql $whereSql,
-		?PDO $pdo = null
+		$pdo = null
 	){
 		parent::__construct($whereSql);
 	}

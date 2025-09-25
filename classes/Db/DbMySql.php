@@ -11,7 +11,7 @@ use \ArrayAccess;
 
 class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.1.4';
+	public const __version = '0.1.5';
 	private const DSN = "mysql:host={host};port={port};dbname={dbname};charset={charset}";
     public $pdo;
     private $params = [];
@@ -25,6 +25,9 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		$pdo = null
 	){
 		parent::__construct($whereSql);
+		if($pdo){
+			$this->pdo = $pdo;
+		}
 	}
 
 	# @ DbSqlInterface
@@ -77,9 +80,6 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 			$query = $this->query = parent::get();
 		}
 
-		// echo "Executing query: " . $query . PHP_EOL;
-		// print_r($params);
-
 		try {
 			$stmt = $this->pdo->prepare($query);
 			$result = $stmt->execute($params ?: null);
@@ -94,9 +94,9 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 	}
 
 	protected function quoteIdentifier($identifier): string
-    {
-        return '`' . str_replace('`', '``', $identifier) . '`';
-    }
+	{
+			return '`' . str_replace('`', '``', $identifier) . '`';
+	}
 
 	# @ DbSqlInterface
 	public function insert() : void {
@@ -323,10 +323,10 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		return isset($this->params[$offset]) ? $this->params[$offset] : null;
 	}
 
-    public function __call($method, $args)
-    {
+  public function __call($method, $args)
+  {
 		return call_user_func_array([$this->pdo, $method], $args);
-    }
+  }
 
 	public function __get(string $propertyName) {
 		if(property_exists(__CLASS__,$propertyName)){

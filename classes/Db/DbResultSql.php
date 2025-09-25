@@ -10,7 +10,11 @@ class DbResultSql {
     private $currentRow;
     private $numRows;
 
-    public function __construct(PDOStatement $statement) {
+    /**
+     * @param PDOStatement $statement
+     * @param mixed $proxyStatement (Swoole\Database\PDOStatementProxy)
+     */
+    public function __construct($statement) {
         $this->statement = $statement;
         $this->resultSet = null;
         $this->currentRow = 0;

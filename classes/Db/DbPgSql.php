@@ -11,7 +11,7 @@ use \ArrayAccess;
 
 class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.1.5';
+	public const __version = '0.1.6';
 	private const DSN = "pgsql:host={host};port={port};dbname={dbname}";
 
     public $pdo;
@@ -27,6 +27,9 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		$pdo = null
 	){
 		parent::__construct($whereSql);
+		if($pdo){
+			$this->pdo = $pdo;
+		}
 	}
 
 	# @ DbSqlInterface
@@ -64,23 +67,12 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 			return $this->whereSql;
 	}
 
-	# pdo 선언 여부 체크
-	private function ensurePdo(): void {
-    if (!$this->pdo instanceof \PDO) {
-        throw new \Exception('PDO is not set. Inject PDO or call connect() first.');
-    }
-	}
-
 	# @ DbSqlInterface
 	public function query(string $query = '', array $params = []): DbResultSql
 	{
-		$this->ensurePdo();
 		if (!$query) {
 			$query = $this->query = parent::get();
 		}
-
-		// echo "Executing query: " . $query . PHP_EOL;
-		// print_r($params);
 
 		try {
 			$stmt = $this->pdo->prepare($query);
@@ -423,10 +415,10 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		return isset($this->params[$offset]) ? $this->params[$offset] : null;
 	}
 
-    public function __call($method, $args)
-    {
+	public function __call($method, $args)
+	{
 		return call_user_func_array([$this->pdo, $method], $args);
-    }
+	}
 
 	public function __get(string $propertyName) {
 		if(property_exists(__CLASS__,$propertyName)){

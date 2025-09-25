@@ -11,19 +11,20 @@ use \ArrayAccess;
 
 class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.1.4';
+	public const __version = '0.1.5';
 	private const DSN = "pgsql:host={host};port={port};dbname={dbname}";
 
     public $pdo;
     private $params = [];
 		private array $bulkData = []; // bulk 데이터를 저장할 배열
     private array $pdo_options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+			PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ];
 
 	public function __construct(
-		WhereSql $whereSql
+		WhereSql $whereSql,
+		?PDO $pdo = null
 	){
 		parent::__construct($whereSql);
 	}
@@ -59,13 +60,21 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 
 	# @ DbSqlInterface
 	public function whereHelper(): WhereSql
-    {
-        return $this->whereSql;
+	{
+			return $this->whereSql;
+	}
+
+	# pdo 선언 여부 체크
+	private function ensurePdo(): void {
+    if (!$this->pdo instanceof \PDO) {
+        throw new \Exception('PDO is not set. Inject PDO or call connect() first.');
     }
+	}
 
 	# @ DbSqlInterface
 	public function query(string $query = '', array $params = []): DbResultSql
 	{
+		$this->ensurePdo();
 		if (!$query) {
 			$query = $this->query = parent::get();
 		}

@@ -11,7 +11,7 @@ use \ArrayAccess;
 
 class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.1.3';
+	public const __version = '0.1.4';
 	private const DSN = "mysql:host={host};port={port};dbname={dbname};charset={charset}";
     public $pdo;
     private $params = [];
@@ -21,7 +21,8 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
     ];
 
 	public function __construct(
-		WhereSql $whereSql
+		WhereSql $whereSql,
+		?PDO $pdo = null
 	){
 		parent::__construct($whereSql);
 	}
@@ -57,13 +58,21 @@ class DbMySql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 
 	# @ DbSqlInterface
 	public function whereHelper(): WhereSql
-    {
-        return $this->whereSql;
+	{
+		return $this->whereSql;
+	}
+
+	# pdo 선언 여부 체크
+	private function ensurePdo(): void {
+    if (!$this->pdo instanceof \PDO) {
+        throw new \Exception('PDO is not set. Inject PDO or call connect() first.');
     }
+	}
 
 	# @ DbSqlInterface
 	public function query(string $query = '', array $params = []): DbResultSql
 	{
+		$this->ensurePdo();
 		if (!$query) {
 			$query = $this->query = parent::get();
 		}

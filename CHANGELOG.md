@@ -1,4 +1,7 @@
 # Changelog
+## Banana[3.5.11]
+- DbPgSql, DbMySql PDO 객체 외부에서 등록이 가능하도록 업데이트(co 루틴등 활용범용을 위한)
+
 ## Banana[3.5.10]
 - DbPgSql, bulk 기능 추가 (insert, update 데이터를 한번에 저장 및 업데이트 하는 기능)
 - bulkData 용 데이터 목록

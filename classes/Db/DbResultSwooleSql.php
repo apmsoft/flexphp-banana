@@ -5,6 +5,7 @@ use PDO;
 use PDOStatement;
 use Swoole\Database\PDOStatementProxy;
 
+#swoole PDO
 class DbResultSwooleSql {
     private $statement;
     private $resultSet;

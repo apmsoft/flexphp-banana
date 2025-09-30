@@ -6,19 +6,33 @@ use PDOStatement;
 
 class DbResultSql {
     private $statement;
-    private $resultSet;
+    private ?array $resultSet = null;
     private $currentRow;
-    private $numRows;
+    private int $numRows = 0;
 
     /**
-     * @param PDOStatement $statement
-     * @param mixed $proxyStatement (Swoole\Database\PDOStatementProxy)
+     * @param \PDOStatement|\Swoole\Database\PDOStatementProxy|object $statement
      */
-    public function __construct($statement) {
+    public function __construct($statement)
+    {
+        // Swoole 클래스를 import하지 않고 문자열로만 판별 (Swoole 미설치 환경에서도 안전)
+        $isPdo    = $statement instanceof \PDOStatement;
+        $isSwoole = is_a($statement, 'Swoole\Database\PDOStatementProxy', false);
+
+        // ✨ 메서드 존재 체크는 제거 (프록시가 __call 로 위임하므로 method_exists가 실패함)
+        if (!$isPdo && !$isSwoole) {
+            $t = is_object($statement) ? get_class($statement) : gettype($statement);
+            throw new \InvalidArgumentException('Unsupported statement: ' . $t);
+        }
+
         $this->statement = $statement;
-        $this->resultSet = null;
-        $this->currentRow = 0;
-        $this->numRows = $statement->rowCount();
+
+        // 드라이버마다 rowCount()가 예외/0일 수 있으니 안전하게
+        try {
+            $this->numRows = (int) $this->statement->rowCount();
+        } catch (\Throwable $e) {
+            $this->numRows = 0;
+        }
     }
 
     public function fetch_assoc() {

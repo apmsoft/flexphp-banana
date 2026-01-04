@@ -1,4 +1,8 @@
 # Changelog
+## Banana[3.5.12]
+- DateTimez toLocal() 메소드 추가 (UTC 시각을 로컬 시각으로 변환 출력)
+-- (new DateTimez("2026-01-04 23:59:59.000 +0900", 'Asia/Seoul'))->toLocal()->format("Y-m-d H:i:s");
+
 ## Banana[3.5.11]
 - DbPgSql, DbMySql PDO 객체 외부에서 등록이 가능하도록 업데이트(co 루틴등 활용범용을 위한)
 

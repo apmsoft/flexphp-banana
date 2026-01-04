@@ -7,7 +7,7 @@ use \DateInterval;
 
 class DateTimez extends DateTime
 {
-	public const __version = '1.2';
+	public const __version = '1.3';
 	public DateTimeZone $dateTimeZone;
 	public string $timezone;
 	public array $location = [];
@@ -48,6 +48,14 @@ class DateTimez extends DateTime
 			}
 		}
 	}
+
+	# UTC 시각을 로컬 시각으로 변환 출력
+	# (new DateTimez($data["expired_at"], ''Asia/Seoul'))->toLocal()->format("Y-m-d H:i:s");
+  public function toLocal(): DateTimez
+  {
+    parent::setTimezone($this->dateTimeZone);
+    return $this;
+  }
 
 	public function chkTimestamp(string|int $times) : string 
 	{

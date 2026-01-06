@@ -6,7 +6,7 @@ use Flex\Banana\Classes\Db\WhereSql;
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
 abstract class QueryBuilderAbstractSql
 {
-    public const __version = '1.5.3';
+    public const __version = '1.5.4';
     private string $query_mode;
     protected array $query_params;
     private array $sub_query_params;
@@ -65,7 +65,7 @@ abstract class QueryBuilderAbstractSql
         else $this->query_tpl = $this->tpl['default'];
     }
 
-    public function set(string $style, string $value) : void {
+    public function set(string $style, ?string $value) : void {
         if($this->query_mode == 'SUB') $this->sub_query_params[$style] = $value;
         else $this->query_params[$style] = $value;
     }

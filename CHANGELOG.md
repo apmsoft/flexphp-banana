@@ -1,4 +1,7 @@
 # Changelog
+## Banana[3.5.14]
+- QueryBuilderAbstractSql::set(string $style, string $value) -> set(string $style, ?string $value) value null 타입 허용
+
 ## Banana[3.5.13]
 - DateTimez toLocal() 메소드 추가 (UTC 시각을 로컬 시각으로 변환 출력)
 -- (new DateTimez("2026-01-04 23:59:59.000 +0900", 'Asia/Seoul'))->toLocal()->format("Y-m-d H:i:s");

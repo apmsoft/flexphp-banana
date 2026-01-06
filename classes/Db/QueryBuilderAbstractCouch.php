@@ -5,7 +5,7 @@ use Flex\Banana\Classes\Db\WhereCouch;
 use Flex\Banana\Classes\Log;
 abstract class QueryBuilderAbstractCouch
 {
-    public const __version = '0.0.2';
+    public const __version = '0.0.3';
     protected array $query_params;
 
     protected const _QUERY_INIT_PARAMS_ = [
@@ -37,7 +37,7 @@ abstract class QueryBuilderAbstractCouch
         $this->query_params = self::_QUERY_INIT_PARAMS_;
     }
 
-    public function set(string $key, $value): void
+    public function set(string $key, mix $value): void
     {
         if($key == 'selector'){
             $this->query_params[$key] = new \stdClass();

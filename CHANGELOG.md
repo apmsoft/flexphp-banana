@@ -1,6 +1,7 @@
 # Changelog
 ## Banana[3.5.14]
 - QueryBuilderAbstractSql::set(string $style, string $value) -> set(string $style, ?string $value) value null 타입 허용
+- UuidGenerator v3 제거, v4,v5,v7 보안 및 최적화 업데이트, 바이너리 변환 기능 추가
 
 ## Banana[3.5.13]
 - DateTimez toLocal() 메소드 추가 (UTC 시각을 로컬 시각으로 변환 출력)

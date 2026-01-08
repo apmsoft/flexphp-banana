@@ -11,7 +11,7 @@ use \ArrayAccess;
 
 class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.1.6';
+	public const __version = '0.1.7';
 	private const DSN = "pgsql:host={host};port={port};dbname={dbname}";
 
     public $pdo;
@@ -277,17 +277,46 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 	}
 
 	# @ QueryBuilderAbstract
-	public function tableJoin(string $join, ...$tables) : self{
-		parent::init('JOIN');
+	public function tableJoin(string $join, ...$tables) : self 
+	{  
+    $upcase = strtoupper($join);
+    
+    // UNION 인지 확인 (UNION은 이어붙이기 개념이 아니라 템플릿 변경이 필요함)
+    $is_union = ($upcase === 'UNION' || $upcase === 'UNION ALL');
 
-		$upcase = strtoupper($join);
-		$implode_join = sprintf(" %s JOIN ",$upcase);
-		parent::setQueryTpl('default');
+    // UNION 처리
+    if ($is_union) {
+			parent::init('MAIN'); // 초기화
+			// 부모 클래스(QueryBuilderAbstractSql)의 오타('UNINON')에 맞춰 키를 전달
+			parent::setQueryTpl('UNINON'); 
+			
+			$join_connector = sprintf(" %s ", $upcase);
+			$value = implode($join_connector, $tables);
+    } 
+    // 일반 JOIN 처리 (INNER, LEFT, RIGHT 등)
+    else {
+			$join_connector = sprintf(" %s JOIN ", $upcase);
+			$new_join_part = implode($join_connector, $tables);
+			
+			// 현재 설정된 테이블 값을 가져옴
+			$current_table = $this->query_params['table'] ?? '';
 
-		$value = implode($implode_join, $tables);
-		parent::set('table', $value);
-	return $this;
-	}
+			if ($current_table) {
+				// [CASE A: 신규 방식] table()이 이미 선언된 경우 -> 뒤에 이어 붙임 (Append)
+				$value = $current_table . $join_connector . $new_join_part;
+			} else {
+				// [CASE B: 기존 방식] table() 없이 바로 tableJoin 호출 -> 초기화 후 설정
+				parent::init('MAIN');
+				parent::setQueryTpl('default');
+				$value = $new_join_part;
+			}
+    }
+
+    // 최종 조립된 문자열을 설정
+    parent::set('table', $value);
+
+    return $this;
+  }
 
 	# @ QueryBuilderAbstract
     public function select(...$columns) : self{

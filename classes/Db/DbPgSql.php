@@ -87,6 +87,47 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		}
 	}
 
+	/**
+   * 멀티쿼리 (PostgreSQL 전용)
+   * - 사용법 1 (기본 1줄): $this->db->multiQuery($sql1, $sql2) 
+   * - 사용법 2 (목록): $this->db->multiQuery( [$sql_list, 'all'] )
+   * - 사용법 3 (혼합): $this->db->multiQuery( $sql1, [$sql_list, 'all'] )
+   * @return array [ 0 => '[JSONString]', 1 => '[JSONString]' ]
+   */
+  public function multiQuery(...$queries) : array {
+    if (empty($queries)) {
+      return [];
+    }
+
+    $select_parts = [];
+    foreach ($queries as $index => $item) {
+      if (is_array($item)) {
+				$sql = $item[0]; 
+      } else {
+				$sql = $item;
+      }
+
+      $sql = rtrim(trim($sql), ';');
+
+      // 쿼리 조립 (COALESCE로 NULL -> '[]' 처리)
+      $select_parts[] = sprintf(
+        "COALESCE((SELECT json_agg(t%d.*) FROM (%s) as t%d), '[]') as result_%d",
+        $index, $sql, $index, $index
+      );
+    }
+
+    $final_query = "SELECT " . implode(', ', $select_parts);
+    
+    try {
+      $row = $this->query($final_query)->fetch_assoc();
+    } catch (Exception $e) {
+      throw new Exception("MultiQuery failed: " . $e->getMessage());
+    }
+
+    // 인덱스 배열로 반환
+    return $row ? array_values($row) : [];
+  }
+
 	protected function quoteIdentifier($identifier): string
 	{
 		return '"' . str_replace('"', '""', $identifier) . '"';
@@ -260,6 +301,73 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
       $this->query($query, $boundParams);
     } catch (\Exception $e) {
       throw new \Exception("Bulk update failed: " . $e->getMessage());
+    }
+  }
+
+	/**
+   * Upsert
+   * 키값이 중복되면 -> 나머지 모든 필드를 업데이트
+   * 키값이 없으면 -> 새로 입력
+   */
+  public function upsert(array $conflict_target) : void {
+    if (empty($this->params)) {
+      throw new Exception("Empty : params for upsert");
+    }
+
+    if (empty($conflict_target)) {
+      throw new Exception("Empty : conflict_target for upsert");
+    }
+
+    $fields = [];
+    $placeholders = [];
+    $boundParams = [];
+
+    // INSERT 구문 준비
+    foreach ($this->params as $field => $value) {
+      $fields[] = $field;
+
+      if (is_string($value) && (str_contains($value, 'encode('))) {
+        $placeholders[] = $value;
+      } else {
+        $placeholders[] = ":$field";
+        $boundParams[":$field"] = $value;
+      }
+    }
+
+    // 업데이트할 컬럼 자동 계산 (전체 컬럼 - 키값 컬럼)
+    $update_cols = array_diff($fields, $conflict_target);
+
+    // 쿼리 조립
+    $conflict_target_str = implode(',', array_map([$this, 'quoteIdentifier'], $conflict_target));
+    $do_update_str = "";
+
+    if (empty($update_cols)) {
+			// 업데이트할 컬럼이 하나도 없으면 (키값만 넣은 경우) -> 생성만 시도하고 중복시 무시
+			$do_update_str = "DO NOTHING";
+    } else {
+			// 나머지 컬럼은 전부 업데이트 (EXCLUDED 사용)
+			$set_parts = [];
+			foreach ($update_cols as $col) {
+				$quotedCol = $this->quoteIdentifier($col);
+				$set_parts[] = "{$quotedCol} = EXCLUDED.{$quotedCol}";
+			}
+			$do_update_str = "DO UPDATE SET " . implode(', ', $set_parts);
+    }
+
+    $query = sprintf(
+      "INSERT INTO %s (%s) VALUES (%s) ON CONFLICT (%s) %s",
+      $this->query_params['table'],
+      implode(',', array_map([$this, 'quoteIdentifier'], $fields)),
+      implode(',', $placeholders),
+      $conflict_target_str,
+      $do_update_str
+    );
+
+    try {
+      $this->params = [];
+      $this->query($query, $boundParams);
+    } catch (Exception $e) {
+      throw new Exception("Upsert failed: " . $e->getMessage());
     }
   }
 

@@ -1,4 +1,7 @@
 # Changelog
+## Banana[3.5.16]
+- DbPgSql pgsql 전용기능 upsert 와 multiQuery 기능 추가
+
 ## Banana[3.5.15]
 - DbPgSql,DbMySql table , tableJoin 연속체인형 구현 가능하도록 업데이트
 

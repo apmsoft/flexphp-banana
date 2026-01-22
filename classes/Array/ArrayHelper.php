@@ -4,10 +4,21 @@ namespace Flex\Banana\Classes\Array;
 # 배열 사용에 도움을 주는 클래스
 class ArrayHelper
 {
-    public const __version = '1.3.2';
+    public const __version = '1.4.0';
+
+    private array $origin = []; # 원본 데이터 보존용
     public function __construct(
         private array $value
-    ){}
+    ){
+        $this->origin = $value;
+    }
+
+    # 데이터를 초기 상태(원본)로 (체이닝 재시작용)
+    public function reset() : self
+    {
+        $this->value = $this->origin;
+        return $this;
+    }
 
     # 멀티배열 키의 값으로 소팅 [{},{}]
     # sort : asc | desc

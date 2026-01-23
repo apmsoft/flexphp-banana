@@ -6,17 +6,17 @@ use Flex\Banana\Classes\Db\WhereSql;
 # purpose : 각종 SQL 관련 디비를 통일성있게  작성할 수 있도록 틀을 제공
 abstract class QueryBuilderAbstractSql
 {
-    public const __version = '1.5.4';
-    private string $query_mode;
+    public const __version = '1.6.0';
+    protected string $query_mode;
     protected array $query_params;
-    private array $sub_query_params;
+    protected array $sub_query_params;
     private string $query_tpl = '';
     private array $tpl = [
-        'union'   => '{table}{where}{groupby}{having}{orderby}{limit}',
-        'default' => 'SELECT {columns}FROM {table}{on}{where}{groupby}{having}{orderby}{limit}'
+        'union'   => '{with}{table}{where}{groupby}{having}{orderby}{limit}',
+        'default' => '{with}SELECT {columns}FROM {table}{on}{where}{groupby}{having}{orderby}{limit}'
     ];
     protected string $query = '';
-    const _QUERY_INIT_PARAMS_ = ['columns'=>'*','table'=>'','where'=>'','orderby'=>'','on'=>'','limit'=>'','groupby'=>'','having'=>''];
+    const _QUERY_INIT_PARAMS_ = ['with'=>'','columns'=>'*','table'=>'','where'=>'','orderby'=>'','on'=>'','limit'=>'','groupby'=>'','having'=>''];
 
     abstract public function table(...$tables) : mixed;
     abstract public function tableJoin(string $type,...$tables) : mixed;
@@ -61,7 +61,7 @@ abstract class QueryBuilderAbstractSql
 
     public function setQueryTpl (string $tpl_mode){
         $upcase = strtoupper($tpl_mode);
-        if($upcase == 'UNINON') $this->query_tpl = $this->tpl['union'];
+        if($upcase == 'UNION') $this->query_tpl = $this->tpl['union'];
         else $this->query_tpl = $this->tpl['default'];
     }
 

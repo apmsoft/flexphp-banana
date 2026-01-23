@@ -11,12 +11,13 @@ use \ArrayAccess;
 
 class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.1.7';
+	public const __version = '0.2.0';
 	private const DSN = "pgsql:host={host};port={port};dbname={dbname}";
 
     public $pdo;
     private $params = [];
 		private array $bulkData = []; // bulk 데이터를 저장할 배열
+		private array $cte_parts = []; // CTE 구문을 담아둘 버퍼
     private array $pdo_options = [
 			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 			PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
@@ -85,6 +86,24 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		} catch (PDOException $e) {
 			throw new Exception("Query failed: " . $e->getMessage());
 		}
+	}
+
+	public function with(...$args): self 
+	{
+		if (empty($args)) return $this;
+
+		// Case A: 배열로 전달됨 (['alias' => 'sql'])
+		if (is_array($args[0])) {
+			foreach ($args[0] as $alias => $query) {
+				$this->cte_parts[] = (string)$alias." AS (".(string)$query.")";
+			}
+		}
+		// Case B: 인자로 전달됨 ('alias', 'sql')
+		else if (count($args) >= 2) {
+			$this->cte_parts[] = (string)$args[0]." AS (".(string)$args[1].")";
+		}
+
+		return $this;
 	}
 
 	/**
@@ -386,41 +405,45 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 
 	# @ QueryBuilderAbstract
 	public function tableJoin(string $join, ...$tables) : self 
-	{  
+  {  
     $upcase = strtoupper($join);
     
-    // UNION 인지 확인 (UNION은 이어붙이기 개념이 아니라 템플릿 변경이 필요함)
-    $is_union = ($upcase === 'UNION' || $upcase === 'UNION ALL');
-
-    // UNION 처리
-    if ($is_union) {
-			parent::init('MAIN'); // 초기화
-			// 부모 클래스(QueryBuilderAbstractSql)의 오타('UNINON')에 맞춰 키를 전달
-			parent::setQueryTpl('UNINON'); 
-			
-			$join_connector = sprintf(" %s ", $upcase);
-			$value = implode($join_connector, $tables);
+    // UNION 처리 (기존 로직 유지)
+    if ($upcase === 'UNION' || $upcase === 'UNION ALL') {
+      parent::init('MAIN'); 
+      parent::setQueryTpl('UNION'); 
+      
+      $join_connector = sprintf(" %s ", $upcase);
+      $value = implode($join_connector, $tables);
     } 
     // 일반 JOIN 처리 (INNER, LEFT, RIGHT 등)
     else {
-			$join_connector = sprintf(" %s JOIN ", $upcase);
-			$new_join_part = implode($join_connector, $tables);
-			
-			// 현재 설정된 테이블 값을 가져옴
-			$current_table = $this->query_params['table'] ?? '';
+      $join_connector = sprintf(" %s JOIN ", $upcase);
+      $new_join_part = implode($join_connector, $tables);
+      
+      // 현재 모드가 SUB인지 확인
+      $is_sub = ($this->query_mode === 'SUB');
+      
+      // 모드에 따라 올바른 저장소에서 현재 테이블 값을 가져옴
+      // SUB 모드면 sub_query_params, 아니면 query_params를 확인
+      $target_params = $is_sub ? $this->sub_query_params : $this->query_params;
+      $current_table = $target_params['table'] ?? '';
 
-			if ($current_table) {
-				// [CASE A: 신규 방식] table()이 이미 선언된 경우 -> 뒤에 이어 붙임 (Append)
-				$value = $current_table . $join_connector . $new_join_part;
-			} else {
-				// [CASE B: 기존 방식] table() 없이 바로 tableJoin 호출 -> 초기화 후 설정
-				parent::init('MAIN');
-				parent::setQueryTpl('default');
-				$value = $new_join_part;
-			}
+      if ($current_table) {
+        // [CASE A] 이미 값이 있으면 뒤에 이어 붙임 (Append)
+        // tableSub()가 채워둔 값 뒤에 JOIN이 예쁘게 붙습니다.
+        $value = $current_table . $join_connector . $new_join_part;
+      } else {
+        // [CASE B] 값이 없으면 초기화 (Init)
+        // 단, 이미 SUB 모드라면 초기화(init MAIN)를 하면 안 됩니다!
+        if (!$is_sub) {
+            parent::init('MAIN');
+            parent::setQueryTpl('default');
+        }
+        $value = $new_join_part;
+      }
     }
 
-    // 최종 조립된 문자열을 설정
     parent::set('table', $value);
 
     return $this;
@@ -557,10 +580,33 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 		return call_user_func_array([$this->pdo, $method], $args);
 	}
 
+	public function get(): string
+  {
+    foreach ($this->query_params as $key => $val) {
+      if ($val === null) $this->query_params[$key] = '';
+    }
+
+		// CTE 모드 체크
+    $is_sub = ($this->query_mode === 'SUB');
+    if (!$is_sub && !empty($this->cte_parts)) {
+      $cte_sql = "WITH " . implode(",\n", $this->cte_parts) . " ";
+      $this->query_params['with'] = $cte_sql;
+    }
+
+    $sql = parent::get();
+
+    // 메인 쿼리일 때만
+    if (!$is_sub) {
+        $this->cte_parts = [];
+    }
+
+    return $sql;
+  }
+
 	public function __get(string $propertyName) {
 		if(property_exists(__CLASS__,$propertyName)){
 			if($propertyName == 'query'){
-				return parent::get();
+				return $this->get();
 			}else{
 				return $this->{$propertyName};
 			}

@@ -5,7 +5,7 @@ use Flex\Banana\Classes\Model;
 
 final class TaskFlow extends Model
 {
-  public const __version = '1.2.2';
+  public const __version = '1.2.3';
   private mixed $active = null;
   private array $adapters = [];
 
@@ -22,7 +22,7 @@ final class TaskFlow extends Model
           $instance($this);
           return $this;
       } catch (\Throwable $e) {
-          Log::e($e->getMessage() . "\n" . $e->getTraceAsString());
+          // Log::e($e->getMessage() . "\n" . $e->getTraceAsString());
           if (is_callable($this->errorCallback)) {
               call_user_func($this->errorCallback, $e);
           }

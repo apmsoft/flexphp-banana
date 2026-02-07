@@ -4,7 +4,7 @@ namespace Flex\Banana\Classes\Array;
 # 배열 사용에 도움을 주는 클래스
 class ArrayHelper
 {
-    public const __version = '1.4.0';
+    public const __version = '1.5.0';
 
     private array $origin = []; # 원본 데이터 보존용
     public function __construct(
@@ -17,6 +17,14 @@ class ArrayHelper
     public function reset() : self
     {
         $this->value = $this->origin;
+        return $this;
+    }
+
+    # 데이터 value와 origin을 모두 교체하여 새롭게 체이닝을 시작
+    public function init(array $newValue) : self
+    {
+        $this->value = $newValue;
+        $this->origin = $newValue;
         return $this;
     }
 

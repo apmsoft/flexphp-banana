@@ -7,7 +7,7 @@ use Flex\Banana\Classes\Text\TextUtil;
 # javascript editjs 텍스트 내용만 찾아 특수문자 제거한 한줄 문장으로 만들기
 trait EditjsFilterMessageTrait
 {
-	const TEXT_LIKE_TYPES = ["paragraph", "header", "quote", "image", "list", "code", "table"];
+	const TEXT_LIKE_TYPES = ["paragraph", "header", "quote", "image", "list", "code", "table", "checklist"];
 	const MEDIA_LIKE_TYPES = ['embed', 'linkTool', 'attaches'];
 	const MEDIA_TYPES_TEXT = ['embed' => "미디어", 'linkTool' => "웹 링크", 'attaches'=>"파일 첨부", 'table' => "표"];
 
@@ -41,6 +41,10 @@ trait EditjsFilterMessageTrait
 						if (!empty($content['data']['items']) && is_array($content['data']['items'])) {
 							$tempHTML = implode(", ", $content['data']['items']);
 						}
+					}else if($content['type'] === "checklist") {
+            if (!empty($content['data']['items']) && is_array($content['data']['items'])) {
+              $tempHTML = implode(", ", array_column($content['data']['items'], 'text'));
+            }
 					}else if($content['type'] === "code") {
 						$tempHTML = $content['data']['code'] ?? "";
 					}else {
@@ -49,6 +53,8 @@ trait EditjsFilterMessageTrait
 				}else{
 					continue;
 				}
+
+
 
 				if(trim($tempHTML)){
 					$xssChars = new XssChars( $tempHTML );
@@ -111,7 +117,22 @@ trait EditjsFilterMessageTrait
 					$text = (string)($data['text'] ?? '');
 					if (trim($text) !== '') $html .= "<h{$level}>{$text}</h{$level}>";
 
-				} else if ($type === "quote") {
+				} else if ($type === "checklist") {
+          $items = $data['items'] ?? [];
+          if (is_array($items) && !empty($items)) {
+            $html .= '<ul class="cdx-checklist">';
+            foreach($items as $it) {
+              $val = (string)($it['text'] ?? '');
+              $checkedClass = !empty($it['checked']) ? 'cdx-checklist__item--checked' : '';
+              if (trim($val) !== '') {
+                $html .= "<li class=\"cdx-checklist__item {$checkedClass}\">";
+                $html .= "<span class=\"cdx-checklist__item-text\">{$val}</span>";
+                $html .= "</li>";
+              }
+            }
+            $html .= "</ul>";
+          }
+        } else if ($type === "quote") {
 					$text = (string)($data['text'] ?? '');
 					$caption = (string)($data['caption'] ?? '');
 					if (trim($text) !== '') {

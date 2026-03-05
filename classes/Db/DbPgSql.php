@@ -283,7 +283,6 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 			throw new \Exception("WHERE clause is missing for bulk update.");
 		}
     
-    // 이 부분은 $this->params를 사용하지 않으므로, $this->bulkData를 직접 사용합니다.
     $firstRow = reset($this->bulkData);
     $fields = array_keys($firstRow);
     
@@ -293,25 +292,31 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
     $i = 0;
     
     foreach ($this->bulkData as $row) {
-        $placeholders = [];
-        foreach ($fields as $field) {
-					$safeField = preg_replace('/[^a-zA-Z0-9_]/', '_', $field);
-					$placeholder = ":{$safeField}_{$i}";
-					$placeholders[] = $placeholder;
-					$boundParams[$placeholder] = $row[$field];
-					
-					// UPDATE SET 절에 사용될 필드
-					if (strpos($field, '::') !== false) {
-							$parts = explode('::', $field);
-							$realField = $parts[0];
-							$castType = $parts[1];
-							$set_clauses[$realField] = sprintf("%s = CAST(temp.%s AS %s)", $this->quoteIdentifier($realField), $this->quoteIdentifier($field), $castType);
-					} else {
+			$placeholders = [];
+			foreach ($fields as $field) {
+				$safeField = preg_replace('/[^a-zA-Z0-9_]/', '_', $field);
+				$placeholder = ":{$safeField}_{$i}";
+				$placeholders[] = $placeholder;
+				$boundParams[$placeholder] = $row[$field];
+				
+				// UPDATE SET 절에 사용될 필드
+				if (strpos($field, '::') !== false) {
+					$parts = explode('::', $field);
+					$realField = $parts[0];
+					$castType = $parts[1];
+
+					if (strpos($this->query_params['where'], $realField) === false) {
+						$set_clauses[$realField] = sprintf("%s = CAST(temp.%s AS %s)", $this->quoteIdentifier($realField), $this->quoteIdentifier($field), $castType);
+					}
+				} else {
+					if (strpos($this->query_params['where'], $field) === false) {
 						$set_clauses[$field] = sprintf("%s = temp.%s", $this->quoteIdentifier($field), $this->quoteIdentifier($field));
 					}
-        }
-        $values_parts[] = sprintf("(%s)", implode(', ', $placeholders));
-        $i++;
+				}
+			}
+			
+			$values_parts[] = sprintf("(%s)", implode(', ', $placeholders));
+			$i++;
     }
     
     $query = sprintf(

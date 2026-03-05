@@ -11,7 +11,7 @@ use \ArrayAccess;
 
 class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
 {
-	public const __version = '0.2.0';
+	public const __version = '0.2.1';
 	private const DSN = "pgsql:host={host};port={port};dbname={dbname}";
 
     public $pdo;
@@ -295,12 +295,20 @@ class DbPgSql extends QueryBuilderAbstractSql implements DbInterface,ArrayAccess
     foreach ($this->bulkData as $row) {
         $placeholders = [];
         foreach ($fields as $field) {
-            $placeholder = ":{$field}_{$i}";
-            $placeholders[] = $placeholder;
-            $boundParams[$placeholder] = $row[$field];
-            
-            // UPDATE SET 절에 사용될 필드
-            $set_clauses[$field] = sprintf("%s = temp.%s", $this->quoteIdentifier($field), $this->quoteIdentifier($field));
+					$safeField = preg_replace('/[^a-zA-Z0-9_]/', '_', $field);
+					$placeholder = ":{$safeField}_{$i}";
+					$placeholders[] = $placeholder;
+					$boundParams[$placeholder] = $row[$field];
+					
+					// UPDATE SET 절에 사용될 필드
+					if (strpos($field, '::') !== false) {
+							$parts = explode('::', $field);
+							$realField = $parts[0];
+							$castType = $parts[1];
+							$set_clauses[$realField] = sprintf("%s = CAST(temp.%s AS %s)", $this->quoteIdentifier($realField), $this->quoteIdentifier($field), $castType);
+					} else {
+						$set_clauses[$field] = sprintf("%s = temp.%s", $this->quoteIdentifier($field), $this->quoteIdentifier($field));
+					}
         }
         $values_parts[] = sprintf("(%s)", implode(', ', $placeholders));
         $i++;

@@ -4,7 +4,7 @@ namespace Flex\Banana\Classes\Html;
 # purpose : xss 방지 및 AI Markdown 파싱 지원
 class XssChars
 {
-  public const __version = '2.0.0';
+  public const __version = '2.0.1';
   private string $description;
   private array $allow_tags = [];
 
@@ -75,20 +75,22 @@ class XssChars
   # 자동 링크 걸기
   public function setAutoLink() : string
   {
-    // 허용된 프로토콜만 화이트리스트로 제한
-		$allowed_protocols = ['http', 'https', 'mailto'];
-		$homepage_pattern = "/([^\"\'\=])(mms|market|http|https|HTTP|ftp|FTP|telnet|TELNET)\:\/\/(.[^ \n\<\"\']+)/";
-		$this->description = preg_replace_callback($homepage_pattern, function($matches) use ($allowed_protocols) {
-			$prefix = $matches[1];
-			$protocol = strtolower($matches[2]);
-			$url_body = $matches[3];
-			$full_url = $protocol . '://' . $url_body;
-			if (!in_array($protocol, $allowed_protocols)) {
-					return $prefix . htmlspecialchars($full_url, ENT_QUOTES, 'UTF-8'); // 악의적 URL은 링크로 변환하지 않음
-			}
-			$safe_url = htmlspecialchars($full_url, ENT_QUOTES, 'UTF-8');
-			return $prefix . "<a href='{$safe_url}' target='_blank' rel='noopener noreferrer'>{$safe_url}</a>";
-		}, ' ' . $this->description);
+    // 허용된 프로토콜만
+    $allowed_protocols = ['http', 'https', 'mailto'];
+    $homepage_pattern = "/([^\"\'\=])(mms|market|http|https|HTTP|ftp|FTP|telnet|TELNET)\:\/\/(.[^ \n\<\"\']+)/";
+    $this->description = preg_replace_callback($homepage_pattern, function($matches) use ($allowed_protocols) {
+      $prefix = $matches[1];
+      $protocol = strtolower($matches[2]);
+      $url_body = $matches[3];
+      $full_url = $protocol . '://' . $url_body;
+      if (!in_array($protocol, $allowed_protocols)) {
+          return $prefix . htmlspecialchars($full_url, ENT_QUOTES, 'UTF-8'); // 악의적 URL은 링크로 변환하지 않음
+      }
+      $safe_url = htmlspecialchars($full_url, ENT_QUOTES, 'UTF-8');
+      return $prefix . "<a href='{$safe_url}' target='_blank' rel='noopener noreferrer'>{$safe_url}</a>";
+    }, ' ' . $this->description);
+
+    return $this->description;
   }
 
   # code html highlight

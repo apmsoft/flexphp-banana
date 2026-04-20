@@ -19,5 +19,9 @@
     "e_first_alphabet": "The first character must be an English letter",
     "e_json": "Please enter the data in JSON format",
     "e_float": "Please enter only numbers and decimal numbers",
-    "e_link_url": "Please enter the URL address correctly"
+    "e_link_url": "Please enter the URL address correctly",
+    "e_min": "Must be at least %s.",
+    "e_max": "Must be less than or equal to %s.",
+    "e_pattern": "The format is incorrect.",
+    "e_ip": "Not a valid IP address."
 }

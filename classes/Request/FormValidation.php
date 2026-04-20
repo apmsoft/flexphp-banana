@@ -7,7 +7,7 @@ use Flex\Banana\Classes\Request\Validation;
 # 폼체크
 class FormValidation extends Validation
 {
-	public const __version = '2.2';
+	public const __version = '2.3.1';
     protected bool $required = false;
     protected $shouldSkipAllValidations = false;
     protected $conditions = [];
@@ -70,6 +70,53 @@ class FormValidation extends Validation
             $this->error_report($this->fieldName, 'e_string_length', sprintf("%s %s", $this->title, $err_msg));
         }
     return $this;
+    }
+
+    # 최소값 검사 (숫자 크기)
+    public function min(int|float $min_value) : FormValidation
+    {
+        if ($this->shouldSkipValidation()) {
+            return $this;
+        }
+
+        if (!$this->isNull() && is_numeric($this->str)) {
+            if (floatval($this->str) < $min_value) {
+                $err_msg =sprintf( R::sysmsg('e_min'), $min_value );
+                $this->error_report($this->fieldName, 'e_min', sprintf("%s은(는) %s", $this->title, $err_msg));
+            }
+        }
+        return $this;
+    }
+
+    # 최대값 검사 (숫자 크기)
+    public function max(int|float $max_value) : FormValidation
+    {
+        if ($this->shouldSkipValidation()) {
+            return $this;
+        }
+
+        if (!$this->isNull() && is_numeric($this->str)) {
+            if (floatval($this->str) > $max_value) {
+                $err_msg =sprintf( R::sysmsg('e_max'), $max_value );
+                $this->error_report($this->fieldName, 'e_max', sprintf("%s은(는) %s", $this->title, $err_msg));
+            }
+        }
+        return $this;
+    }
+
+    # 정규표현식 커스텀 검사
+    // 사업자 번호 검사 (000-00-00000) ->pattern('/^\d{3}-\d{2}-\d{5}$/');
+    // 한국 휴대폰 ->pattern('/^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/')
+    public function pattern(string $regex) : FormValidation
+    {
+        if ($this->shouldSkipValidation()) {
+            return $this;
+        }
+
+        if (!$this->isNull() && !preg_match($regex, $this->str)) {
+            $this->error_report($this->fieldName, 'e_pattern', sprintf("%s은(는) %s", $this->title, R::sysmsg('e_pattern')));
+        }
+        return $this;
     }
 
     # 특수 문자 있으면 reject
@@ -332,10 +379,24 @@ class FormValidation extends Validation
             return $this;
         }
 
-        if($this->str && !is_float(floatval($this->str))){
-            $this->error_report($this->fieldName, 'e_float', sprintf("%s %s", $this->title,R::sysmsg('e_float')));
+        // floatval() 대신 filter_var() 사용
+        if($this->str && filter_var($this->str, FILTER_VALIDATE_FLOAT) === false){
+            $this->error_report($this->fieldName, 'e_float', sprintf("%s %s", $this->title, R::sysmsg('e_float')));
         }
-    return $this;
+        return $this;
+    }
+
+    # 유효한 IP 주소(IPv4, IPv6)인지 검사
+    public function ip() : FormValidation
+    {
+        if ($this->shouldSkipValidation()) {
+            return $this;
+        }
+
+        if (!$this->isNull() && !filter_var($this->str, FILTER_VALIDATE_IP)) {
+            $this->error_report($this->fieldName, 'e_ip', sprintf("%s은(는) %s", $this->title, R::sysmsg('e_ip')));
+        }
+        return $this;
     }
 
 	private function error_report(string $field, string $msg_code, string $msg)

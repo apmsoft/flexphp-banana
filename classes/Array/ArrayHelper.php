@@ -4,7 +4,7 @@ namespace Flex\Banana\Classes\Array;
 # 배열 사용에 도움을 주는 클래스
 class ArrayHelper
 {
-    public const __version = '1.6.0';
+    public const __version = '1.6.1';
 
     private array $origin = []; # 원본 데이터 보존용
     public function __construct(
@@ -109,6 +109,7 @@ class ArrayHelper
         $result = [];
         $find_mcnt   = count($params);
         $up_operator = strtoupper($operator);
+        
         foreach ($this->value as $key => $value)
         {
             if($up_operator == 'AND')
@@ -124,7 +125,7 @@ class ArrayHelper
                                 case '>=': if($value[$fk] >= $fvalue) $find_cnt++;break;
                                 case '<': if($value[$fk] < $fvalue) $find_cnt++; break;
                                 case '<=': if($value[$fk] <= $fvalue) $find_cnt++; break;
-                                case '=': if($value[$fk] = $fvalue) $find_cnt++;break;
+                                case '=': if($value[$fk] == $fvalue) $find_cnt++;break; // '='를 '=='로 수정 완료
                                 case '!=': if($value[$fk] != $fvalue) $find_cnt++;break;
                                 case 'LIKE': 
                                     if(strpos($value[$fk],$fvalue) !==false) $find_cnt++;
@@ -140,10 +141,10 @@ class ArrayHelper
                             $find_cnt++;
                         }
                     }
+                }
 
-                    if($find_cnt == $find_mcnt){
-                        $result[] = $value;
-                    }
+                if($find_cnt == $find_mcnt){
+                    $result[] = $value;
                 }
             }else{
                 foreach ($params as $fk => $fv) {
@@ -155,7 +156,7 @@ class ArrayHelper
         }
 
         $this->value = $result;
-    return $this;
+        return $this;
     }
 
     # [추가] 대량 데이터용 Generator 기반 필터링 (재사용 가능)

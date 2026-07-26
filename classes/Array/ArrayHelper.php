@@ -4,7 +4,7 @@ namespace Flex\Banana\Classes\Array;
 # 배열 사용에 도움을 주는 클래스
 class ArrayHelper
 {
-    public const __version = '1.5.0';
+    public const __version = '1.6.0';
 
     private array $origin = []; # 원본 데이터 보존용
     public function __construct(
@@ -77,13 +77,30 @@ class ArrayHelper
     }
 
     # select 여러키 중에서 원하는 키만 뽑아서 배열에 담기
-    public function select(...$keys) : ArrayHelper 
+    # 내부 $this->value를 직접 수정하므로 메모리 복사 비용이 없음
+    public function select(...$keys, bool $inplace = true) : self
     {
-        $this->value = array_map(function($item) use ($keys) {
-            return array_intersect_key($item, array_flip($keys));
-        }, $this->value);
-
+        if ($inplace) {
+            // 기존 배열의 요소를 직접 수정 (메모리 절약)
+            foreach ($this->value as $idx => $item) {
+                $this->value[$idx] = array_intersect_key($item, array_flip($keys));
+            }
+        } else {
+            // 새로운 배열 생성 (불변성 유지)
+            $this->value = array_map(function($item) use ($keys) {
+                return array_intersect_key($item, array_flip($keys));
+            }, $this->value);
+        }
         return $this;
+    }
+
+    # 결과물을 다시 ArrayHelper로 감싸 체이닝을 유지할 수 있게 함
+    # 대량 데이터의 경우 이 메서드를 통해 '흐름'을 생성
+    public function stream() : \Generator
+    {
+        foreach ($this->value as $key => $item) {
+            yield $key => $item;
+        }
     }
 
     # 멀티 키 => 밸류 값 찾기 OR
@@ -139,6 +156,16 @@ class ArrayHelper
 
         $this->value = $result;
     return $this;
+    }
+
+    # [추가] 대량 데이터용 Generator 기반 필터링 (재사용 가능)
+    # 이 메서드는 ArrayHelper 객체 자체를 바꾸지 않고 '결과만 흐름으로 반환'함
+    # 따라서 이 메서드 호출 후에도 기존 객체는 원본 상태(혹은 이전 상태)를 유지함
+    public function queryStream(array $params, string $operator='AND'): \Generator
+    {
+        foreach ($this->findWhere($params, $operator)->stream() as $key => $val) {
+            yield $key => $val;
+        }
     }
 
     # 멀티 키 => 밸류 값 찾기

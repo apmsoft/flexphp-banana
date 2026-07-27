@@ -1,489 +1,1168 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Flex\Banana\Classes\Array;
 
-# 배열 사용에 도움을 주는 클래스
-class ArrayHelper
-{
-    public const __version = '1.6.1';
+#
+# 1차원 배열 지원 가능:
+# sum, min, max, avg, map, reduce, stream, slice, split, fill, count
 
-    private array $origin = []; # 원본 데이터 보존용
-    public function __construct(
-        private array $value
-    ){
+# 2차원 배열 전용:
+# find, findAll, findWhere, queryStream, select, sorting, unique, isnull, dropnull, fillnull, pluck, changeKeys
+# 배열 처리용 체이닝 헬퍼.
+# 요구 PHP 버전: PHP 8.0 이상
+class ArrayHelper implements \Countable, \IteratorAggregate, \JsonSerializable
+{
+    public const __version = '2.0.0';
+
+    # @var array<int, string>
+    private const COMPARISON_OPERATORS = [
+        '>', '>=', '<', '<=', '=', '==', '===', '!=', '<>', '!==',
+        'LIKE', 'CONTAINS', 'NOT LIKE', 'NOT CONTAINS',
+        'LIKE-R', 'STARTS WITH', 'LIKE-L', 'ENDS WITH',
+        'IN', 'NOT IN', 'IN STRICT', 'NOT IN STRICT',
+        'BETWEEN', 'NOT BETWEEN', 'BETWEEN EXCLUSIVE', 'NOT BETWEEN EXCLUSIVE',
+        'IS NULL', 'IS NOT NULL',
+    ];
+
+    # @var array<mixed>
+    private array $origin;
+
+    # @var array<mixed>
+    private array $value;
+
+    #
+    # @param array<mixed> $value
+    public function __construct(array $value = [])
+    {
+        $this->value = $value;
         $this->origin = $value;
     }
 
-    # 데이터를 초기 상태(원본)로 (체이닝 재시작용)
-    public function reset() : self
+    #
+    # @param array<mixed> $value
+    public static function make(array $value = []): static
+    {
+        return new static($value);
+    }
+
+    # 원본 상태로 복원합니다.
+    public function reset(): self
     {
         $this->value = $this->origin;
         return $this;
     }
 
-    # 데이터 value와 origin을 모두 교체하여 새롭게 체이닝을 시작
-    public function init(array $newValue) : self
+    #
+    # 현재 데이터와 원본 데이터를 모두 교체합니다.
+    #
+    # @param array<mixed> $newValue
+    public function init(array $newValue): self
     {
         $this->value = $newValue;
         $this->origin = $newValue;
         return $this;
     }
 
-    # 멀티배열 키의 값으로 소팅 [{},{}]
-    # sort : asc | desc
-    # key : 소팅 비교할 키네임
-    public function sorting(string $key, string $sorting = 'ASC') : ArrayHelper
+    # @return array<mixed>
+    public function all(): array
     {
-        $sorting = strtoupper($sorting);
-        usort($this->value, function($a, $b) use ($key,$sorting) {
-            return match($sorting){
-                'DESC' => $this->desc($a[$key],$b[$key]),
-                'ASC'  => $this->asc($a[$key],$b[$key])
-            };
-        });
-    return $this;
+        return $this->value;
     }
 
-    # 멀티배열 중 원하는 값의 첫번째 키를 찾아낸다
-    public function find(string $key, mixed $val) : ArrayHelper
+    # @return array<mixed>
+    public function original(): array
     {
-        $index = $this->findIndex($key, $val);
-        if($index > -1){
-            $this->value = $this->value[$index];
-        }else $this->value = [];
-    return $this;
+        return $this->origin;
     }
 
-    # 멀티배열 중 원하는 값의 전체를 찾아 낸다
-    public function findAll(string $key,...$params) : ArrayHelper
+    public function isEmpty(): bool
     {
-        $values = $params;
+        return $this->value === [];
+    }
 
-        # 배열로 들어왔는지 체크
-        if(is_array($params[0])){
-            $values = $params[0];
+    public function count(): int
+    {
+        return count($this->value);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return $this->stream();
+    }
+
+    # @return array<mixed>
+    public function jsonSerialize(): mixed
+    {
+        return $this->value;
+    }
+
+    #
+    # 다차원 배열을 특정 열로 정렬합니다.
+    # 숫자 키는 0부터 다시 정렬됩니다(usort 동작).
+    #
+    # @param string|int $key
+    public function sorting(string|int $key, string $sorting = 'ASC'): self
+    {
+        $direction = strtoupper(trim($sorting));
+        if ($direction !== 'ASC' && $direction !== 'DESC') {
+            throw new \InvalidArgumentException(
+                "지원하지 않는 정렬 방향입니다: {$sorting}. ASC 또는 DESC를 사용하세요."
+            );
         }
 
-        $result = [];
-        $argv = array_column($this->value, $key);
-        foreach($argv as $idx => $val){
-            foreach($values as $fval){
-                if($val == $fval){
-                    $result[] = $this->value[$idx];
-                }
+        $this->assertRows($this->value, __METHOD__);
+        foreach ($this->value as $index => $row) {
+            if (!array_key_exists($key, $row)) {
+                throw new \OutOfBoundsException(
+                    sprintf('%s: %s번째 행에 정렬 키 [%s]가 없습니다.', __METHOD__, (string) $index, (string) $key)
+                );
             }
         }
-        $this->value = $result;
-    return $this;
-    }
 
-    # select 여러키 중에서 원하는 키만 뽑아서 배열에 담기
-    # 내부 $this->value를 직접 수정하므로 메모리 복사 비용이 없음
-    public function select(...$keys, bool $inplace = true) : self
-    {
-        if ($inplace) {
-            // 기존 배열의 요소를 직접 수정 (메모리 절약)
-            foreach ($this->value as $idx => $item) {
-                $this->value[$idx] = array_intersect_key($item, array_flip($keys));
+        usort(
+            $this->value,
+            static function (array $left, array $right) use ($key, $direction): int {
+                $comparison = $left[$key] <=> $right[$key];
+                return $direction === 'ASC' ? $comparison : -$comparison;
             }
-        } else {
-            // 새로운 배열 생성 (불변성 유지)
-            $this->value = array_map(function($item) use ($keys) {
-                return array_intersect_key($item, array_flip($keys));
-            }, $this->value);
-        }
+        );
+
         return $this;
     }
 
-    # 결과물을 다시 ArrayHelper로 감싸 체이닝을 유지할 수 있게 함
-    # 대량 데이터의 경우 이 메서드를 통해 '흐름'을 생성
-    public function stream() : \Generator
+    #
+    # 지정 열에서 첫 번째 일치 행을 찾습니다.
+    # 찾지 못하면 value는 빈 배열이 됩니다.
+    public function find(string|int $key, mixed $val, bool $strict = false): self
     {
-        foreach ($this->value as $key => $item) {
-            yield $key => $item;
-        }
-    }
+        $this->assertRows($this->value, __METHOD__);
 
-    # 멀티 키 => 밸류 값 찾기 OR
-    public function findWhere (array $params, string $operator='AND') : ArrayHelper
-    {
-        $result = [];
-        $find_mcnt   = count($params);
-        $up_operator = strtoupper($operator);
-        
-        foreach ($this->value as $key => $value)
-        {
-            if($up_operator == 'AND')
-            {
-                $find_cnt = 0;
-                foreach ($params as $fk => $fv) {
-                    if (isset($value[$fk])){
-                        if(is_array($fv)){
-                            $condition = $fv[0];
-                            $fvalue = $fv[1];
-                            switch($condition){
-                                case '>': if($value[$fk] > $fvalue) $find_cnt++;break;
-                                case '>=': if($value[$fk] >= $fvalue) $find_cnt++;break;
-                                case '<': if($value[$fk] < $fvalue) $find_cnt++; break;
-                                case '<=': if($value[$fk] <= $fvalue) $find_cnt++; break;
-                                case '=': if($value[$fk] == $fvalue) $find_cnt++;break; // '='를 '=='로 수정 완료
-                                case '!=': if($value[$fk] != $fvalue) $find_cnt++;break;
-                                case 'LIKE': 
-                                    if(strpos($value[$fk],$fvalue) !==false) $find_cnt++;
-                                    break;
-                                case 'LIKE-R':
-                                    if (preg_match('/^' . preg_quote($fvalue, '/') . '/', $value[$fk])) { $find_cnt++; }
-                                    break;
-                                case 'LIKE-L':
-                                    if (preg_match('/^.*' . preg_quote($fvalue, '/') . '$/', $value[$fk])) { $find_cnt++; }
-                                    break;
-                            }
-                        }else if($value[$fk] == $fv){
-                            $find_cnt++;
-                        }
-                    }
-                }
-
-                if($find_cnt == $find_mcnt){
-                    $result[] = $value;
-                }
-            }else{
-                foreach ($params as $fk => $fv) {
-                    if (isset($value[$fk]) && $value[$fk] == $fv){
-                        $result[] = $value;
-                    }
-                }
+        foreach ($this->value as $row) {
+            if (
+                array_key_exists($key, $row)
+                && $this->valuesEqual($row[$key], $val, $strict)
+            ) {
+                $this->value = $row;
+                return $this;
             }
         }
 
-        $this->value = $result;
+        $this->value = [];
         return $this;
     }
 
-    # [추가] 대량 데이터용 Generator 기반 필터링 (재사용 가능)
-    # 이 메서드는 ArrayHelper 객체 자체를 바꾸지 않고 '결과만 흐름으로 반환'함
-    # 따라서 이 메서드 호출 후에도 기존 객체는 원본 상태(혹은 이전 상태)를 유지함
-    public function queryStream(array $params, string $operator='AND'): \Generator
+    #
+    # 지정 열에서 여러 값 중 하나와 일치하는 행을 찾습니다.
+    #
+    # 사용 예:
+    # - findAll('status', 'ready', 'done')
+    # - findAll('status', ['ready', 'done'])
+    public function findAll(string|int $key, mixed ...$params): self
     {
-        foreach ($this->findWhere($params, $operator)->stream() as $key => $val) {
-            yield $key => $val;
+        $this->assertRows($this->value, __METHOD__);
+
+        if ($params === []) {
+            $this->value = [];
+            return $this;
         }
-    }
 
-    # 멀티 키 => 밸류 값 찾기
-    public function findWhereIndex (array $params) : int
-    {
-        $result = -1;
-        $find_mcnt = count($params);
-        foreach ($this->value as $key => $value)
-        {
-            $find_cnt = 0;
-            foreach ($params as $fk => $fv) {
-                if (isset($value[$fk]) && $value[$fk] == $fv){
-                    $find_cnt++;
-                }
+        $values = count($params) === 1 && is_array($params[0])
+            ? array_values($params[0])
+            : $params;
 
-                if($find_cnt == $find_mcnt){
-                    $result = $key;
+        $result = [];
+        foreach ($this->value as $row) {
+            if (!array_key_exists($key, $row)) {
+                continue;
+            }
+
+            foreach ($values as $expected) {
+                if ($this->valuesEqual($row[$key], $expected, false)) {
+                    $result[] = $row;
                     break;
                 }
             }
-
-            if($result>-1){
-                break;
-            }
         }
-    return $result;
+
+        $this->value = $result;
+        return $this;
     }
 
-    # 중복 데이터 제거
-    public function unique(string $column_name) : ArrayHelper
+    #
+    # 각 행에서 지정한 키만 남깁니다.
+    #
+    # 사용 예:
+    # - select('id', 'name')
+    # - select(['id', 'name'])
+    # - select('id', 'name', false)
+    #
+    # 마지막 bool 값은 기존 API의 inplace 옵션입니다. 어느 경우든 체이닝 객체의
+    # value는 결과로 교체되며, false일 때만 별도 결과 배열을 만들어 교체합니다.
+    public function select(mixed ...$args): self
     {
+        $inplace = true;
+        if ($args !== [] && is_bool($args[array_key_last($args)])) {
+            $inplace = (bool) array_pop($args);
+        }
+
+        $keys = count($args) === 1 && is_array($args[0])
+            ? array_values($args[0])
+            : $args;
+        $keys = $this->validateKeys($keys, __METHOD__);
+
+        $this->assertRows($this->value, __METHOD__);
+        $keyMap = array_fill_keys($keys, true);
+
+        if ($inplace) {
+            foreach ($this->value as $index => $row) {
+                $this->value[$index] = array_intersect_key($row, $keyMap);
+            }
+            return $this;
+        }
+
         $result = [];
-        $fd_args = array_unique(array_column($this->value, $column_name));
-        foreach($fd_args as $idx => $val){
-            $result[] = $this->value[$idx];
+        foreach ($this->value as $index => $row) {
+            $result[$index] = array_intersect_key($row, $keyMap);
         }
         $this->value = $result;
-    return $this;
+
+        return $this;
     }
 
-    # 빈데이터가 있는 배열 찾기
-    public function isnull(...$params) : ArrayHelper
+    #
+    # 호출 시점의 value를 Generator로 반환합니다.
+    # PHP 배열의 copy-on-write 특성상, 실제 수정 전까지 불필요한 전체 복사는 발생하지 않습니다.
+    public function stream(): \Generator
     {
-        $result = [];
+        $source = $this->value;
 
-        # 지정된 키들이 있는지 체크
-        if(count($params) > 0){
-            foreach($this->value as $idx => $arg){
-                foreach ($params as $key) {
-                    if (isset($arg[$key]) && ($arg[$key] === '' || $arg[$key] === null)) {
-                        $result[$idx] = $arg;
+        return (static function (array $rows): \Generator {
+            foreach ($rows as $key => $item) {
+                yield $key => $item;
+            }
+        })($source);
+    }
+
+    #
+    # 다중 조건 검색 후 내부 value를 결과로 교체합니다.
+    #
+    # 조건 예:
+    # - ['status' => 'active']
+    # - ['age' => ['>=', 20]]
+    # - ['name' => ['LIKE', 'kim']]
+    # - ['id' => ['IN', [1, 2, 3]]]
+    # - ['score' => ['BETWEEN', [80, 100]]]
+    # - ['deleted_at' => ['IS NULL']]
+    #
+    # @param array<string|int, mixed> $params
+    public function findWhere(
+        array $params,
+        string $operator = 'AND',
+        bool $preserveKeys = false
+    ): self {
+        $logicalOperator = $this->normalizeLogicalOperator($operator);
+        $this->validateWhereParams($params);
+        $this->assertRows($this->value, __METHOD__);
+
+        $result = [];
+        foreach ($this->value as $key => $row) {
+            if (!$this->matchesWhere($row, $params, $logicalOperator)) {
+                continue;
+            }
+
+            if ($preserveKeys) {
+                $result[$key] = $row;
+            } else {
+                $result[] = $row;
+            }
+        }
+
+        $this->value = $result;
+        return $this;
+    }
+
+    #
+    # Generator 기반 조건 검색입니다.
+    # - 중간 결과 배열을 만들지 않습니다.
+    # - 객체의 value/origin을 변경하지 않습니다.
+    # - 호출 시점의 value를 사용합니다.
+    # - 원본 키를 보존합니다.
+    #
+    # @param array<string|int, mixed> $params
+    public function queryStream(array $params, string $operator = 'AND'): \Generator
+    {
+        $logicalOperator = $this->normalizeLogicalOperator($operator);
+        $this->validateWhereParams($params);
+
+        $source = $this->value;
+        $this->assertRows($source, __METHOD__);
+        $matcher = function (array $row) use ($params, $logicalOperator): bool {
+            return $this->matchesWhere($row, $params, $logicalOperator);
+        };
+
+        return (static function (array $rows, callable $matches): \Generator {
+            foreach ($rows as $key => $row) {
+                if ($matches($row)) {
+                    yield $key => $row;
+                }
+            }
+        })($source, $matcher);
+    }
+
+    #
+    # 조건에 맞는 첫 번째 행의 0 기반 위치를 반환합니다.
+    # 찾지 못하면 -1을 반환합니다.
+    #
+    # @param array<string|int, mixed> $params
+    public function findWhereIndex(array $params, string $operator = 'AND'): int
+    {
+        $logicalOperator = $this->normalizeLogicalOperator($operator);
+        $this->validateWhereParams($params);
+        $this->assertRows($this->value, __METHOD__);
+
+        $position = 0;
+        foreach ($this->value as $row) {
+            if ($this->matchesWhere($row, $params, $logicalOperator)) {
+                return $position;
+            }
+            $position++;
+        }
+
+        return -1;
+    }
+
+    #
+    # 지정 열을 기준으로 첫 번째 행만 남기고 중복을 제거합니다.
+    # 열이 없는 행들은 동일한 '누락 값'으로 취급합니다.
+    public function unique(string|int $columnName, bool $strict = true): self
+    {
+        $this->assertRows($this->value, __METHOD__);
+
+        $result = [];
+        $missing = new \stdClass();
+
+        if ($strict) {
+            $seen = [];
+            foreach ($this->value as $row) {
+                $candidate = array_key_exists($columnName, $row)
+                    ? $row[$columnName]
+                    : $missing;
+                $fingerprint = $this->fingerprint($candidate);
+
+                if (isset($seen[$fingerprint])) {
+                    continue;
+                }
+
+                $seen[$fingerprint] = true;
+                $result[] = $row;
+            }
+        } else {
+            # @var array<int, array{missing: bool, value: mixed}> $seen
+            $seen = [];
+            foreach ($this->value as $row) {
+                $isMissing = !array_key_exists($columnName, $row);
+                $candidate = $isMissing ? null : $row[$columnName];
+                $duplicated = false;
+
+                foreach ($seen as $seenValue) {
+                    if ($isMissing || $seenValue['missing']) {
+                        if ($isMissing && $seenValue['missing']) {
+                            $duplicated = true;
+                            break;
+                        }
+                        continue;
+                    }
+
+                    if ($this->valuesEqual($candidate, $seenValue['value'], false)) {
+                        $duplicated = true;
                         break;
                     }
                 }
-            }
-        }else{
-            foreach($this->value as $idx => $arg){
-                if (in_array('', $arg, true) || in_array(null, $arg, true)) {
-                    $result[$idx] = $arg;
+
+                if ($duplicated) {
+                    continue;
                 }
+
+                $seen[] = ['missing' => $isMissing, 'value' => $candidate];
+                $result[] = $row;
             }
         }
+
         $this->value = $result;
-    return $this;
+        return $this;
     }
 
-    # 빈데이터가 있는 배열 제거
-    public function dropnull(...$params) : ArrayHelper
+    #
+    # null, 빈 문자열 또는 지정 키 누락이 있는 행만 남깁니다.
+    # 키를 생략하면 행 전체 열을 검사합니다.
+    #
+    # 사용 예: isnull('name', 'email'), isnull(['name', 'email'])
+    public function isnull(mixed ...$params): self
     {
+        $keys = $this->normalizeKeyArguments($params, __METHOD__);
+        $this->assertRows($this->value, __METHOD__);
+
         $result = [];
-        # 지정된 키들이 있는지 체크
-        if(count($params) > 0){
-            foreach($this->value as $idx => $arg){
-                foreach ($params as $key) {
-                    if (isset($arg[$key]) && ($arg[$key] !== '' || $arg[$key] !== null)) {
-                        $result[] = $arg;
-                        break;
-                    }
-                }
-            }
-        }else{
-            foreach($this->value as $idx => $arg){
-                if (!in_array('', $arg, true) || !in_array(null, $arg, true)) {
-                    $result[] = $arg;
-                }
+        foreach ($this->value as $index => $row) {
+            if ($this->rowHasNullLikeValue($row, $keys)) {
+                $result[$index] = $row;
             }
         }
+
         $this->value = $result;
-    return $this;
+        return $this;
     }
 
-    # 빈데이터 있는 배열에 데이터 채우기
-    public function fillnull(mixed $filldata) : ArrayHelper
+    #
+    # null, 빈 문자열 또는 지정 키 누락이 있는 행을 제거합니다.
+    # 키를 생략하면 행의 모든 열을 검사합니다.
+    # 결과는 0부터 다시 정렬됩니다.
+    #
+    # 사용 예: dropnull('name', 'email'), dropnull(['name', 'email'])
+    public function dropnull(mixed ...$params): self
     {
-        $is_arr = (is_array($filldata)) ? true : false;
-        foreach($this->value as $idx => $arg){
-            $cur_keys = array_keys($arg,null);
-            foreach($cur_keys as $nkey){
-                if($is_arr){
-                    if(isset($filldata[$nkey])){
-                        $this->value[$idx][$nkey] = $filldata[$nkey];
-                    }
-                }else{
-                    $this->value[$idx][$nkey] = $filldata;
-                }
+        $keys = $this->normalizeKeyArguments($params, __METHOD__);
+        $this->assertRows($this->value, __METHOD__);
+
+        $result = [];
+        foreach ($this->value as $row) {
+            if (!$this->rowHasNullLikeValue($row, $keys)) {
+                $result[] = $row;
             }
         }
-    return $this;
+
+        $this->value = $result;
+        return $this;
     }
 
-    # fill
-    public function fill(int $start=0, ?int $length=null, mixed $value=null) : ArrayHelper
+    #
+    # null 값을 채웁니다. includeEmptyString=true이면 빈 문자열도 채웁니다.
+    # fillData가 배열이면 열별 대체값 맵으로 처리합니다.
+    public function fillnull(mixed $fillData, bool $includeEmptyString = false): self
     {
-        if ($length === null || $length < $start) {
-            $length = $start;
+        $this->assertRows($this->value, __METHOD__);
+        $useColumnMap = is_array($fillData);
+
+        foreach ($this->value as $rowIndex => $row) {
+            foreach ($row as $column => $currentValue) {
+                $shouldFill = $currentValue === null
+                    || ($includeEmptyString && $currentValue === '');
+
+                if (!$shouldFill) {
+                    continue;
+                }
+
+                if ($useColumnMap) {
+                    if (array_key_exists($column, $fillData)) {
+                        $this->value[$rowIndex][$column] = $fillData[$column];
+                    }
+                    continue;
+                }
+
+                $this->value[$rowIndex][$column] = $fillData;
+            }
         }
 
-        // 원래의 배열 값을 유지하면서 새로운 범위만 변경
-        $args = array_fill($start, $length, $value);
-        $this->value = $this->value + $args;
-    return $this;
+        return $this;
     }
 
-    # 배열 끝에 추가
-    public function append(array $args) : ArrayHelper
+    #
+    # 숫자 인덱스 배열에서 start부터 length개 값을 덮어씁니다.
+    # length가 null이면 start부터 현재 배열 끝까지 덮어씁니다.
+    public function fill(int $start = 0, ?int $length = null, mixed $value = null): self
+    {
+        if ($start < 0) {
+            throw new \InvalidArgumentException('fill의 start는 0 이상이어야 합니다.');
+        }
+        if ($length !== null && $length < 0) {
+            throw new \InvalidArgumentException('fill의 length는 0 이상이거나 null이어야 합니다.');
+        }
+        if (!$this->isList($this->value)) {
+            throw new \LogicException('fill은 0부터 이어지는 숫자 인덱스 배열에만 사용할 수 있습니다.');
+        }
+        if ($start > count($this->value)) {
+            throw new \OutOfBoundsException('fill의 start는 현재 배열 길이보다 클 수 없습니다.');
+        }
+
+        $actualLength = $length ?? max(0, count($this->value) - $start);
+        if ($actualLength === 0) {
+            return $this;
+        }
+
+        $replacement = array_fill($start, $actualLength, $value);
+        $this->value = array_replace($this->value, $replacement);
+        ksort($this->value);
+
+        return $this;
+    }
+
+    # 배열 끝에 하나의 행을 추가합니다.
+    public function append(array $args): self
     {
         $this->value[] = $args;
-    return $this;
+        return $this;
     }
 
-    # 특정 배열의 int 값 sum 하기
-    public function sum(string $key = '') : int|float
+    #
+    # 숫자값의 합계를 반환합니다.
+    # key가 null 또는 빈 문자열이면 현재 1차원 배열의 숫자값을 합산합니다.
+    public function sum(string|int|null $key = null): int|float
     {
-        $result = ($key) ? $this->find_numeric($key) : $this->value;
-        $sum = ($key) ? array_sum($result) : count($result);
-    return $sum;
+        $numbers = $this->findNumeric($this->normalizeOptionalKey($key));
+        return array_sum($numbers);
     }
 
-    # 특정 배열의 int 값 min 값
-    public function min(string $key = '') : int|float
+    # 숫자값의 최솟값을 반환하며 숫자값이 없으면 null입니다.
+    public function min(string|int|null $key = null): int|float|null
     {
-        $result = ($key) ? $this->find_numeric($key) : array_keys($this->value);
-        $min = 0;
-        if(count($result)){
-            $min = min($result);
-        }
-    return $min;
+        $numbers = $this->findNumeric($this->normalizeOptionalKey($key));
+        return $numbers === [] ? null : min($numbers);
     }
 
-    # 특정 배열의 int 값 min 값
-    public function max(string $key = '') : int|float
+    # 숫자값의 최댓값을 반환하며 숫자값이 없으면 null입니다.
+    public function max(string|int|null $key = null): int|float|null
     {
-        $result = ($key) ? $this->find_numeric($key) : array_keys($this->value);
-        $max = 0;
-        if(count($result)){
-            $max = max($result);
-        }
-    return $max;
+        $numbers = $this->findNumeric($this->normalizeOptionalKey($key));
+        return $numbers === [] ? null : max($numbers);
     }
 
-    # 특정 배열의 int 값의 평균 값
-    public function avg(string $key) : int|float
+    # 숫자값의 평균을 반환하며 숫자값이 없으면 null입니다.
+    public function avg(string|int|null $key = null): int|float|null
     {
-        $result = $this->find_numeric($key);
-        $avg = 0;
-        $cnt = count($result);
-        if($cnt>0){
-            $avg = array_sum($result) / $cnt;
-        }
-    return $avg;
-    }
-
-    # union
-    public function union (array $params) : ArrayHelper
-    {
-        $temp = [];
-
-        # params columns
-        $columns = [];
-        foreach($params as $uikey => $pvalue){
-            $columns[$uikey] = explode(',', $pvalue);
+        $numbers = $this->findNumeric($this->normalizeOptionalKey($key));
+        if ($numbers === []) {
+            return null;
         }
 
-        $arr = [];
-        foreach($this->value as $uikey => $args)
-        {
-            $index = 0;
-            foreach($args as $cidx => $cargs)
-            {
-                foreach($columns[$uikey] as $column_name){
-                    if(isset($temp[$column_name][$cidx])){
-                        $arr[$index][$column_name] = $cargs[$column_name];
+        return array_sum($numbers) / count($numbers);
+    }
+
+    #
+    # 여러 데이터셋에서 선택한 열을 같은 행 위치끼리 합칩니다.
+    #
+    # value 예:
+    # [
+    #   [ ['id' => 1, 'name' => 'A'], ['id' => 2, 'name' => 'B'] ],
+    #   [ ['score' => 90],            ['score' => 80] ]
+    # ]
+    #
+    # params 예:
+    # [0 => 'id,name', 1 => ['score']]
+    public function union(array $params): self
+    {
+        $result = [];
+
+        foreach ($this->value as $datasetKey => $dataset) {
+            if (!array_key_exists($datasetKey, $params)) {
+                continue;
+            }
+            if (!is_array($dataset)) {
+                throw new \UnexpectedValueException(
+                    sprintf('%s: 데이터셋 [%s]는 배열이어야 합니다.', __METHOD__, (string) $datasetKey)
+                );
+            }
+
+            $columns = $this->normalizeColumnSelection($params[$datasetKey], __METHOD__);
+            $rows = array_values($dataset);
+
+            foreach ($rows as $rowIndex => $row) {
+                if (!is_array($row)) {
+                    throw new \UnexpectedValueException(
+                        sprintf(
+                            '%s: 데이터셋 [%s]의 %d번째 행은 배열이어야 합니다.',
+                            __METHOD__,
+                            (string) $datasetKey,
+                            $rowIndex
+                        )
+                    );
+                }
+
+                foreach ($columns as $column) {
+                    if (array_key_exists($column, $row)) {
+                        $result[$rowIndex][$column] = $row[$column];
                     }
                 }
-            $index++;
             }
         }
-        $this->value = $arr;
-    return $this;
-    }
 
-    # union All
-    public function unionAll(...$params) : ArrayHelper
-    {
-        $this->value = call_user_func_array('array_merge', $params);
+        $this->value = array_values($result);
         return $this;
     }
 
-    # index key number
-    public function findIndex(string $key, mixed $val) : int
+    # 전달받은 배열들을 순서대로 이어 붙입니다.
+    public function unionAll(array ...$params): self
     {
-        $result = -1;
-        $index = array_search($val, array_column($this->value, $key));
-        if($index !== false){
-            $result = $index;
-        }
-    return $result;
+        $this->value = $params === [] ? [] : array_merge(...$params);
+        return $this;
     }
 
-    # split 배열 여러개씩 잘라서 묶음으로 배열화 하기
-    public function split(int $length = 2) : ArrayHelper {
-        $this->value = array_chunk($this->value, $length );
-    return $this;
-    }
-
-    # slice 배열 자르기
-    public function slice(...$params) : ArrayHelper {
-        $result = [];
-        if(count($params) > 1){
-            $result = array_slice($this->value, $params[0],$params[1]);
-        }else {
-            $result = array_slice($this->value, $params[0]);
-        }
-
-        $this->value = $result;
-
-    return $this;
-    }
-
-    # 모든배열의 키를 새롭게 바꿈
-    public function changeKeys (...$keys) : ArrayHelper | null
+    #
+    # 지정 열에서 첫 번째 일치 행의 0 기반 위치를 반환합니다.
+    # 찾지 못하면 -1입니다.
+    public function findIndex(string|int $key, mixed $val, bool $strict = false): int
     {
-        $result = [];
+        $this->assertRows($this->value, __METHOD__);
 
-        # key 만 뽑기
-        $arrKeys = (isset($keys[0]) && is_array($keys[0])) ? array_values($keys[0]) : array_values($keys);
-
-        # 키배열크기와 값크기가 일치하는지 체크 및 부족한 키 밸류키에서 넣기
-        $kCnt = count($arrKeys);
-        $vCnt = count($this->value[0]);
-        $valueKeys = array_keys($this->value[0]);
-        if($kCnt < $vCnt){
-            for($i=$kCnt; $i < $vCnt; $i++){
-                $arrKeys[] = $valueKeys[$i];
+        $position = 0;
+        foreach ($this->value as $row) {
+            if (
+                array_key_exists($key, $row)
+                && $this->valuesEqual($row[$key], $val, $strict)
+            ) {
+                return $position;
             }
-        }else if($kCnt > $vCnt){
-            $arrKeys = array_slice($arrKeys,0,$vCnt);
+            $position++;
         }
 
-        # change keys
-        foreach($this->value as $index => $args){
-            $result[] = array_combine($arrKeys, array_values($args));
-        }
-        $this->value = $result;
-
-    return $this;
+        return -1;
     }
 
+    # 배열을 length개씩 묶습니다.
+    public function split(int $length = 2, bool $preserveKeys = false): self
+    {
+        if ($length <= 0) {
+            throw new \InvalidArgumentException('split의 length는 1 이상이어야 합니다.');
+        }
+
+        $this->value = array_chunk($this->value, $length, $preserveKeys);
+        return $this;
+    }
+
+    # 배열 일부를 잘라냅니다.
+    public function slice(int $offset, ?int $length = null, bool $preserveKeys = false): self
+    {
+        $this->value = array_slice($this->value, $offset, $length, $preserveKeys);
+        return $this;
+    }
+
+    #
+    # 각 행의 키를 위치 기준으로 변경합니다.
+    # 새 키가 부족하면 해당 행의 기존 키를 나머지 위치에 사용하고, 많으면 잘라냅니다.
+    #
+    # 사용 예: changeKeys('user_id', 'user_name'), changeKeys(['user_id', 'user_name'])
+    public function changeKeys(mixed ...$keys): self
+    {
+        $newKeys = count($keys) === 1 && is_array($keys[0])
+            ? array_values($keys[0])
+            : $keys;
+        $newKeys = $this->validateKeys($newKeys, __METHOD__);
+
+        if ($this->value === []) {
+            return $this;
+        }
+
+        $this->assertRows($this->value, __METHOD__);
+        $result = [];
+
+        foreach ($this->value as $rowIndex => $row) {
+            $values = array_values($row);
+            $valueCount = count($values);
+            if ($valueCount === 0) {
+                $result[] = [];
+                continue;
+            }
+
+            $effectiveKeys = array_slice($newKeys, 0, $valueCount);
+            $originalKeys = array_keys($row);
+
+            for ($i = count($effectiveKeys); $i < $valueCount; $i++) {
+                $effectiveKeys[] = $originalKeys[$i];
+            }
+
+            $this->assertUniqueKeys($effectiveKeys, __METHOD__, $rowIndex);
+            $combined = array_combine($effectiveKeys, $values);
+            if ($combined === false) {
+                throw new \RuntimeException(__METHOD__ . ': 키 변경 중 array_combine에 실패했습니다.');
+            }
+            $result[] = $combined;
+        }
+
+        $this->value = $result;
+        return $this;
+    }
+
+    # 각 요소에 callback을 적용하며 기존 배열 키를 보존합니다.
     public function map(callable $callback): self
     {
-        $this->value = array_map($callback, $this->value);
+        $result = [];
+        foreach ($this->value as $key => $item) {
+            $result[$key] = $callback($item);
+        }
+        $this->value = $result;
+
         return $this;
     }
 
+    # 배열을 하나의 값으로 축약합니다.
     public function reduce(callable $callback, mixed $initial = null): mixed
     {
         return array_reduce($this->value, $callback, $initial);
     }
 
-    # 원하는 키만 뽑아서 1차원 배열로 출력하기
-    public function pluck(string $key) : ArrayHelper
+    #
+    # 지정 열을 1차원 배열로 추출합니다.
+    # indexKey를 지정하면 해당 열의 값을 결과 키로 사용합니다.
+    public function pluck(string|int $key, string|int|null $indexKey = null): self
     {
-        $this->value = array_column($this->value, $key);
+        $this->assertRows($this->value, __METHOD__);
+        $this->value = array_column($this->value, $key, $indexKey);
         return $this;
     }
 
-    private function find_numeric (string $key) : array
+    #
+    # 기존 코드 호환용 읽기 접근입니다.
+    # $helper->value와 $helper->origin만 허용합니다.
+    public function __get(string $propertyName): mixed
     {
-        $result = [];
-        foreach($this->value as $a){
-            if(is_numeric($a[$key])){
-                $result[] = $a[$key];
+        return match ($propertyName) {
+            'value' => $this->value,
+            'origin' => $this->origin,
+            default => throw new \OutOfBoundsException("정의되지 않은 속성입니다: {$propertyName}"),
+        };
+    }
+
+    #
+    # 기존 코드 호환용 쓰기 접근입니다.
+    # value를 바꿔도 origin은 유지되며, 둘 다 바꾸려면 init()을 사용하세요.
+    #
+    # @param array<mixed> $args
+    public function __set(string $propertyName, array $args): void
+    {
+        match ($propertyName) {
+            'value' => $this->value = $args,
+            'origin' => $this->origin = $args,
+            default => throw new \OutOfBoundsException("정의되지 않은 속성입니다: {$propertyName}"),
+        };
+    }
+
+    public function __isset(string $propertyName): bool
+    {
+        return $propertyName === 'value' || $propertyName === 'origin';
+    }
+
+    private function normalizeLogicalOperator(string $operator): string
+    {
+        $operator = strtoupper(trim($operator));
+        if ($operator !== 'AND' && $operator !== 'OR') {
+            throw new \InvalidArgumentException(
+                "지원하지 않는 논리 연산자입니다: {$operator}. AND 또는 OR를 사용하세요."
+            );
+        }
+
+        return $operator;
+    }
+
+    # @param array<string|int, mixed> $params
+    private function validateWhereParams(array $params): void
+    {
+        foreach ($params as $field => $condition) {
+            if (!is_array($condition)) {
+                continue;
+            }
+
+            if (!array_key_exists(0, $condition)) {
+                throw new \InvalidArgumentException(
+                    sprintf('필드 [%s] 조건은 [연산자, 비교값] 형식이어야 합니다.', (string) $field)
+                );
+            }
+
+            $comparison = strtoupper(trim((string) $condition[0]));
+            if (!in_array($comparison, self::COMPARISON_OPERATORS, true)) {
+                throw new \InvalidArgumentException(
+                    "지원하지 않는 비교 연산자입니다: {$comparison}"
+                );
+            }
+
+            $unary = $comparison === 'IS NULL' || $comparison === 'IS NOT NULL';
+            $expectedKeys = $unary ? [0] : [0, 1];
+            if (array_keys($condition) !== $expectedKeys) {
+                $format = $unary ? "['{$comparison}']" : "['{$comparison}', 비교값]";
+                throw new \InvalidArgumentException(
+                    sprintf('필드 [%s] 조건은 %s 형식이어야 합니다.', (string) $field, $format)
+                );
+            }
+
+            if ($unary) {
+                continue;
+            }
+
+            $expected = $condition[1];
+            if (in_array($comparison, ['IN', 'NOT IN', 'IN STRICT', 'NOT IN STRICT'], true)) {
+                $this->requireArrayOperand($expected, $comparison);
+            }
+
+            if (in_array(
+                $comparison,
+                ['BETWEEN', 'NOT BETWEEN', 'BETWEEN EXCLUSIVE', 'NOT BETWEEN EXCLUSIVE'],
+                true
+            )) {
+                $range = $this->requireArrayOperand($expected, $comparison);
+                if (array_keys($range) !== [0, 1]) {
+                    throw new \InvalidArgumentException(
+                        "{$comparison} 비교값은 [최솟값, 최댓값] 형식이어야 합니다."
+                    );
+                }
             }
         }
-    return $result;
     }
 
-    private function asc ($a, $b ): mixed {
-        return $a <=> $b;
+    #
+    # @param array<string|int, mixed> $row
+    # @param array<string|int, mixed> $params
+    private function matchesWhere(array $row, array $params, string $operator): bool
+    {
+        if ($params === []) {
+            return true;
+        }
+
+        foreach ($params as $field => $condition) {
+            $matched = array_key_exists($field, $row)
+                && $this->matchesCondition($row[$field], $condition);
+
+            if ($operator === 'AND' && !$matched) {
+                return false;
+            }
+            if ($operator === 'OR' && $matched) {
+                return true;
+            }
+        }
+
+        return $operator === 'AND';
     }
 
-    private function desc ($a, $b ): mixed {
-        return $a <= $b;
+    private function matchesCondition(mixed $actual, mixed $condition): bool
+    {
+        if (!is_array($condition)) {
+            // null은 빈 문자열과 구분하고, 그 외 기본 조건은 1.x 호환을 위해 느슨한 비교를 유지합니다.
+            return $this->valuesEqual($actual, $condition, false);
+        }
+
+        $comparison = strtoupper(trim((string) $condition[0]));
+        $expected = $condition[1] ?? null;
+
+        return match ($comparison) {
+            '>' => $actual > $expected,
+            '>=' => $actual >= $expected,
+            '<' => $actual < $expected,
+            '<=' => $actual <= $expected,
+            '=', '==' => $this->valuesEqual($actual, $expected, false),
+            '===' => $this->valuesEqual($actual, $expected, true),
+            '!=', '<>' => !$this->valuesEqual($actual, $expected, false),
+            '!==' => !$this->valuesEqual($actual, $expected, true),
+
+            'LIKE', 'CONTAINS' => str_contains(
+                $this->stringify($actual, $comparison),
+                $this->stringify($expected, $comparison)
+            ),
+            'NOT LIKE', 'NOT CONTAINS' => !str_contains(
+                $this->stringify($actual, $comparison),
+                $this->stringify($expected, $comparison)
+            ),
+            'LIKE-R', 'STARTS WITH' => str_starts_with(
+                $this->stringify($actual, $comparison),
+                $this->stringify($expected, $comparison)
+            ),
+            'LIKE-L', 'ENDS WITH' => str_ends_with(
+                $this->stringify($actual, $comparison),
+                $this->stringify($expected, $comparison)
+            ),
+
+            'IN' => $this->containsValue(
+                $this->requireArrayOperand($expected, $comparison),
+                $actual,
+                false
+            ),
+            'NOT IN' => !$this->containsValue(
+                $this->requireArrayOperand($expected, $comparison),
+                $actual,
+                false
+            ),
+            'IN STRICT' => $this->containsValue(
+                $this->requireArrayOperand($expected, $comparison),
+                $actual,
+                true
+            ),
+            'NOT IN STRICT' => !$this->containsValue(
+                $this->requireArrayOperand($expected, $comparison),
+                $actual,
+                true
+            ),
+
+            'BETWEEN' => $this->isBetween($actual, $expected, true),
+            'NOT BETWEEN' => !$this->isBetween($actual, $expected, true),
+            'BETWEEN EXCLUSIVE' => $this->isBetween($actual, $expected, false),
+            'NOT BETWEEN EXCLUSIVE' => !$this->isBetween($actual, $expected, false),
+
+            'IS NULL' => $actual === null,
+            'IS NOT NULL' => $actual !== null,
+
+            default => throw new \InvalidArgumentException(
+                "지원하지 않는 비교 연산자입니다: {$comparison}"
+            ),
+        };
     }
 
-    public function __get(string $propertyName){
+    # @param array<mixed> $values
+    private function containsValue(array $values, mixed $needle, bool $strict): bool
+    {
+        foreach ($values as $value) {
+            if ($this->valuesEqual($needle, $value, $strict)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function valuesEqual(mixed $left, mixed $right, bool $strict): bool
+    {
+        if ($strict) {
+            return $left === $right;
+        }
+
+        // PHP의 느슨한 비교에서 null과 빈 문자열이 같아지는 문제를 방지합니다.
+        if ($left === null || $right === null) {
+            return $left === null && $right === null;
+        }
+
+        // 서로 다른 복합 형식 비교 시 발생할 수 있는 객체 변환 Notice를 방지합니다.
+        if (is_object($left) || is_object($right)) {
+            return is_object($left) && is_object($right) && $left == $right;
+        }
+        if (is_array($left) || is_array($right)) {
+            return is_array($left) && is_array($right) && $left == $right;
+        }
+        if (is_resource($left) || is_resource($right)) {
+            return is_resource($left) && is_resource($right) && (int) $left === (int) $right;
+        }
+
+        return $left == $right;
+    }
+
+    private function stringify(mixed $value, string $operator): string
+    {
+        if ($value === null) {
+            return '';
+        }
+        if (is_scalar($value) || $value instanceof \Stringable) {
+            return (string) $value;
+        }
+
+        throw new \InvalidArgumentException(
+            sprintf('%s 연산에는 문자열로 변환 가능한 값만 사용할 수 있습니다.', $operator)
+        );
+    }
+
+    # @return array<mixed>
+    private function requireArrayOperand(mixed $expected, string $operator): array
+    {
+        if (!is_array($expected)) {
+            throw new \InvalidArgumentException("{$operator} 연산의 비교값은 배열이어야 합니다.");
+        }
+
+        return $expected;
+    }
+
+    private function isBetween(mixed $actual, mixed $expected, bool $inclusive): bool
+    {
+        $range = $this->requireArrayOperand($expected, $inclusive ? 'BETWEEN' : 'BETWEEN EXCLUSIVE');
+        if (array_keys($range) !== [0, 1]) {
+            throw new \InvalidArgumentException('BETWEEN 비교값은 [최솟값, 최댓값] 형식이어야 합니다.');
+        }
+
+        [$minimum, $maximum] = [$range[0], $range[1]];
+        if ($minimum > $maximum) {
+            [$minimum, $maximum] = [$maximum, $minimum];
+        }
+
+        return $inclusive
+            ? $actual >= $minimum && $actual <= $maximum
+            : $actual > $minimum && $actual < $maximum;
+    }
+
+    #
+    # @param array<mixed> $rows
+    private function assertRows(array $rows, string $method): void
+    {
+        foreach ($rows as $key => $row) {
+            if (!is_array($row)) {
+                throw new \UnexpectedValueException(
+                    sprintf('%s: [%s] 요소는 배열이어야 하며 실제 형식은 %s입니다.', $method, (string) $key, get_debug_type($row))
+                );
+            }
+        }
+    }
+
+    #
+    # @param array<mixed> $keys
+    # @return array<int, string|int>
+    private function validateKeys(array $keys, string $method): array
+    {
         $result = [];
-        if(property_exists($this,$propertyName)){
-            $result = $this->{$propertyName};
+        foreach ($keys as $key) {
+            if (!is_string($key) && !is_int($key)) {
+                throw new \InvalidArgumentException(
+                    sprintf('%s: 키는 string 또는 int여야 하며 실제 형식은 %s입니다.', $method, get_debug_type($key))
+                );
+            }
+            $result[] = $key;
         }
-    return $result;
+
+        return $result;
     }
 
-    public function __set(string $propertyName, array $args) : void{
-        if(property_exists($this,$propertyName)){
-            if(is_array($args))
-            $this->{$propertyName} = $args;
+    #
+    # @param array<mixed> $params
+    # @return array<int, string|int>
+    private function normalizeKeyArguments(array $params, string $method): array
+    {
+        $keys = count($params) === 1 && is_array($params[0])
+            ? array_values($params[0])
+            : $params;
+
+        return $this->validateKeys($keys, $method);
+    }
+
+    #
+    # @param array<string|int, mixed> $row
+    # @param array<int, string|int> $keys
+    private function rowHasNullLikeValue(array $row, array $keys): bool
+    {
+        if ($keys === []) {
+            foreach ($row as $value) {
+                if ($value === null || $value === '') {
+                    return true;
+                }
+            }
+            return false;
         }
+
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $row) || $row[$key] === null || $row[$key] === '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    #
+    # @return array<int, int|float>
+    private function findNumeric(string|int|null $key): array
+    {
+        $result = [];
+
+        if ($key === null) {
+            foreach ($this->value as $value) {
+                $number = $this->toNumber($value);
+                if ($number !== null) {
+                    $result[] = $number;
+                }
+            }
+            return $result;
+        }
+
+        $this->assertRows($this->value, __METHOD__);
+        foreach ($this->value as $row) {
+            if (!array_key_exists($key, $row)) {
+                continue;
+            }
+
+            $number = $this->toNumber($row[$key]);
+            if ($number !== null) {
+                $result[] = $number;
+            }
+        }
+
+        return $result;
+    }
+
+    private function toNumber(mixed $value): int|float|null
+    {
+        if (is_int($value) || is_float($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            # @var int|float $number
+            $number = $value + 0;
+            return $number;
+        }
+
+        return null;
+    }
+
+    private function normalizeOptionalKey(string|int|null $key): string|int|null
+    {
+        return $key === '' ? null : $key;
+    }
+
+    #
+    # @return array<int, string|int>
+    private function normalizeColumnSelection(mixed $selection, string $method): array
+    {
+        if (is_string($selection)) {
+            $selection = array_values(array_filter(
+                array_map('trim', explode(',', $selection)),
+                static fn(string $column): bool => $column !== ''
+            ));
+        }
+
+        if (!is_array($selection)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s: 열 선택값은 쉼표 문자열 또는 배열이어야 합니다.', $method)
+            );
+        }
+
+        return $this->validateKeys(array_values($selection), $method);
+    }
+
+    #
+    # @param array<int, string|int> $keys
+    private function assertUniqueKeys(array $keys, string $method, string|int $rowIndex): void
+    {
+        $normalized = [];
+        foreach ($keys as $key) {
+            $normalized[$key] = true;
+        }
+
+        if (count($normalized) !== count($keys)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s: [%s]번째 행에 적용할 키가 중복됩니다.', $method, (string) $rowIndex)
+            );
+        }
+    }
+
+    private function fingerprint(mixed $value): string
+    {
+        if ($value === null || is_scalar($value)) {
+            return get_debug_type($value) . ':' . serialize($value);
+        }
+        if (is_resource($value)) {
+            return 'resource:' . get_resource_type($value) . ':' . (int) $value;
+        }
+        if (is_object($value)) {
+            return 'object:' . get_class($value) . ':' . spl_object_id($value);
+        }
+
+        $parts = [];
+        foreach ($value as $key => $item) {
+            $parts[] = serialize($key) . '=>' . $this->fingerprint($item);
+        }
+        return 'array:[' . implode('|', $parts) . ']';
+    }
+
+    # @param array<mixed> $array
+    private function isList(array $array): bool
+    {
+        $expected = 0;
+        foreach ($array as $key => $_value) {
+            if ($key !== $expected) {
+                return false;
+            }
+            $expected++;
+        }
+        return true;
     }
 }
